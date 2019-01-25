@@ -10,6 +10,7 @@ import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import boomerang.results.ForwardBoomerangResults;
+import crypto.rules.CryptSLPredicate;
 import crypto.rules.StateMachineGraph;
 import crypto.rules.StateNode;
 import crypto.rules.TransitionEdge;
@@ -25,12 +26,12 @@ import typestate.TransitionFunction;
 public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 
 	private ForwardBoomerangResults<TransitionFunction> analysisResults;
-	private Set<EnsuredCryptSLPredicate> ensuredPredicates = Sets.newHashSet();
+	private Set<CryptSLPredicate> potentialPredicates = Sets.newHashSet();
 	private ExtendedIDEALAnaylsis problem;
-	private boolean analyzed;
 
 	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate) {
 		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
+		this.ensuresPredicates = true;
 	}
 
 	@Override
@@ -39,19 +40,18 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 		ExtendedIDEALAnaylsis solver = getOrCreateAnalysis();
 		solver.run(this);
 		analysisResults = solver.getResults();
-		for(EnsuredCryptSLPredicate pred : ensuredPredicates)
-			ensurePredicates(pred);
-		cryptoScanner.getAnalysisListener().onSeedFinished(this, analysisResults);
-		analyzed = true;
-	}
 
-	protected void ensurePredicates(EnsuredCryptSLPredicate pred) {
 		if(analysisResults == null)
 			return;
 
 		for(Cell<Statement, Val, TransitionFunction> c : analysisResults.asStatementValWeightTable().cellSet()){
-			predicateHandler.addPotentialPredicate(this,c.getRowKey(), c.getColumnKey(), pred);
+			for(CryptSLPredicate p : potentialPredicates) {
+				ensuredPredicates.add(new RequiredCryptSLPredicate(p, c.getRowKey()));
+				ensuredPredicatesAtStatement.put(c.getRowKey(), new RequiredCryptSLPredicate(p, c.getRowKey()));
+			}
 		}
+
+		cryptoScanner.getAnalysisListener().onSeedFinished(this, analysisResults);
 	}
 
 
@@ -91,11 +91,9 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 		return problem;
 	}
 
-	public void addEnsuredPredicate(EnsuredCryptSLPredicate pred) {
-		if(ensuredPredicates.add(pred) && analyzed)
-			ensurePredicates(pred);
+	public void addPotentiallyEnsuredPredicate(CryptSLPredicate potentialPredicate) {
+		potentialPredicates.add(potentialPredicate);
 	}
-
 
 	@Override
 	public String toString() {

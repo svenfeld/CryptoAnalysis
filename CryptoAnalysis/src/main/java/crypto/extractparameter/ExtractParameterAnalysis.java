@@ -50,7 +50,6 @@ public class ExtractParameterAnalysis {
 			return key;
 		}
 	};
-	private Collection<CallSiteWithParamIndex> querySites = Sets.newHashSet();
 
 	public ExtractParameterAnalysis(CryptoScanner cryptoScanner, Map<Statement, SootMethod> allCallsOnObject,
 			SootBasedStateMachineGraph fsm) {
@@ -71,11 +70,11 @@ public class ExtractParameterAnalysis {
 			for (Entry<String, String> param : matchingDescriptor.getParameters()) {
 				if (!param.getKey().equals("_")) {
 					soot.Type parameterType = method.getParameterType(index);
-					// Ignore parameters for whose types a rule exists. These flows will be computed
-					// in AnalysisSeedWithSpecification
-					if (cryptoScanner.hasRulesForType(parameterType)) {
-						continue;
-					}
+//					// Ignore parameters for whose types a rule exists. These flows will be computed
+//					// in AnalysisSeedWithSpecification
+//					if (cryptoScanner.hasRulesForType(parameterType)) {
+//						continue;
+//					}
 					if (parameterType.toString().equals(param.getValue())) {
 						addQueryAtCallsite(param.getKey(), e.getValue().stmt(), index);
 					}
@@ -112,7 +111,7 @@ public class ExtractParameterAnalysis {
 		return res;
 	}
 
-	public void combineDataFlows() {
+	public void combineDataFlowsForRuleObjects() {
 		for(Entry<CryptSLMethod, Node<Statement,SootMethod>> e : getCalledMethodAtEventsOfObject().entries()) {
 			CryptSLMethod matchingDescriptor = e.getKey();
 			SootMethod method = e.getValue().fact();
@@ -131,6 +130,8 @@ public class ExtractParameterAnalysis {
 									param.getKey());
 							Set<IAnalysisSeed> reachingSeeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(callSite, queryVal));
 							collectedValues.putAll(callSiteWithParamIndex, reachingSeeds);
+							
+							//TODO remove duplicates from the queries below
 						}						
 					}
 				}
@@ -147,10 +148,6 @@ public class ExtractParameterAnalysis {
 		return propagatedTypes;
 	}
 
-	public Collection<CallSiteWithParamIndex> getAllQuerySites() {
-		return querySites;
-	}
-
 	public void addQueryAtCallsite(final String varNameInSpecification, final Statement stmt, final int index) {
 		if (!stmt.isCallsite())
 			return;
@@ -159,7 +156,6 @@ public class ExtractParameterAnalysis {
 			CallSiteWithParamIndex cs = new CallSiteWithParamIndex(stmt, new Val(parameter, stmt.getMethod()), index,
 					varNameInSpecification);
 			collectedValues.put(cs, new ForwardQuery(stmt, new AllocVal(parameter, stmt.getMethod(), parameter, stmt)));
-			querySites.add(cs);
 			throw new RuntimeException("Unreachable");
 		}
 		Val queryVal = new Val((Local) parameter, stmt.getMethod());
@@ -169,22 +165,12 @@ public class ExtractParameterAnalysis {
 					.getOrCreate(new AdditionalBoomerangQuery(new Statement((Stmt) pred, stmt.getMethod()), queryVal));
 			CallSiteWithParamIndex callSiteWithParamIndex = new CallSiteWithParamIndex(stmt, queryVal, index,
 					varNameInSpecification);
-			querySites.add(callSiteWithParamIndex);
 			query.addListener(new QueryListener() {
 				@Override
 				public void solved(AdditionalBoomerangQuery q, BackwardBoomerangResults<NoWeight> res) {
 					propagatedTypes.putAll(callSiteWithParamIndex, res.getPropagationType());
 					collectedValues.putAll(callSiteWithParamIndex, res.getAllocationSites().keySet());
-					// for (ForwardQuery v : res.getAllocationSites().keySet()) {
-					// ExtractedValue extractedValue = null;
-					// if(v.var() instanceof AllocVal) {
-					// AllocVal allocVal = (AllocVal) v.var();
-					// extractedValue = new
-					// ExtractedValue(allocVal.allocationStatement(),allocVal.allocationValue());
-					// } else {
-					// extractedValue = new ExtractedValue(v.stmt(),v.var().value());
-					// }
-					// }
+					System.out.println(res.getAllocationSites());
 				}
 			});
 		}

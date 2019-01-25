@@ -1,7 +1,6 @@
 package tests.headless;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.Set;
 
 import org.junit.Before;
@@ -14,6 +13,7 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 
 import boomerang.BackwardQuery;
+import boomerang.ForwardQuery;
 import boomerang.Query;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
@@ -31,8 +31,6 @@ import crypto.analysis.errors.NeverTypeOfError;
 import crypto.analysis.errors.RequiredPredicateError;
 import crypto.analysis.errors.TypestateError;
 import crypto.extractparameter.CallSiteWithParamIndex;
-import crypto.extractparameter.ExtractedValue;
-import crypto.interfaces.ISLConstraint;
 import crypto.rules.CryptSLPredicate;
 import soot.G;
 import sync.pds.solver.nodes.Node;
@@ -295,7 +293,7 @@ public class HeadlessTest {
 
 			@Override
 			public void collectedValues(AnalysisSeedWithSpecification seed,
-					Multimap<CallSiteWithParamIndex, ExtractedValue> collectedValues) {
+					Multimap<CallSiteWithParamIndex, ForwardQuery> collectedValues) {
 			}
 			@Override
 			public void seedStarted(IAnalysisSeed analysisSeedWithSpecification) {

@@ -1,23 +1,13 @@
 package test.assertions;
 
+import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
-import crypto.analysis.EnsuredCryptSLPredicate;
-import soot.jimple.Stmt;
-import test.Assertion;
+import crypto.analysis.RequiredCryptSLPredicate;
 
-public class HasEnsuredPredicateAssertion implements Assertion {
+public class HasEnsuredPredicateAssertion extends  EnsuredPredicateAssertion{
 
-	private Stmt stmt;
-	private Val val;
-	private boolean satisfied;
-
-	public HasEnsuredPredicateAssertion(Stmt stmt,  Val val) {
-		this.stmt = stmt;
-		this.val = val;
-	}
-	
-	public Val getAccessGraph() {
-		return val;
+	public HasEnsuredPredicateAssertion(Statement stmt, Val val) {
+		super(stmt, val);
 	}
 
 	@Override
@@ -31,11 +21,11 @@ public class HasEnsuredPredicateAssertion implements Assertion {
 	}
 
 
-	public Stmt getStmt() {
+	public Statement getStmt() {
 		return stmt;
 	}
 
-	public void reported(Val seed, EnsuredCryptSLPredicate pred) {
+	public void reported(Val seed, RequiredCryptSLPredicate pred) {
 		if(seed.equals(val))
 			satisfied = true;
 	}
@@ -44,4 +34,5 @@ public class HasEnsuredPredicateAssertion implements Assertion {
 	public String toString() {
 		return "Expected a predicate for "+ val +" @ " + stmt;  
 	}
+
 }

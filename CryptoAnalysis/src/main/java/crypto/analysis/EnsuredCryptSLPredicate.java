@@ -1,28 +1,22 @@
 package crypto.analysis;
 
-import com.google.common.collect.Multimap;
-
-import crypto.extractparameter.CallSiteWithParamIndex;
-import crypto.extractparameter.ExtractedValue;
+import boomerang.jimple.Statement;
+import boomerang.jimple.Val;
 import crypto.rules.CryptSLPredicate;
+import sync.pds.solver.nodes.Node;
 
 public class EnsuredCryptSLPredicate {
 
 	private final CryptSLPredicate predicate;
-	private final Multimap<CallSiteWithParamIndex, ExtractedValue> parametersToValues;
+	private Node<Statement, Val> location;
 
-	public EnsuredCryptSLPredicate(CryptSLPredicate predicate, Multimap<CallSiteWithParamIndex, ExtractedValue> parametersToValues2) {
+	public EnsuredCryptSLPredicate(CryptSLPredicate predicate, Node<Statement,Val> location) {
 		this.predicate = predicate;
-		parametersToValues = parametersToValues2;
+		this.location = location;
 	}
 	
 	public CryptSLPredicate getPredicate(){
 		return predicate;
-	}
-	
-
-	public Multimap<CallSiteWithParamIndex, ExtractedValue> getParametersToValues() {
-		return  parametersToValues;
 	}
 	
 	public String toString() {
@@ -34,6 +28,7 @@ public class EnsuredCryptSLPredicate {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
+		result = prime * result + ((location == null) ? 0 : location.hashCode());
 		return result;
 	}
 
@@ -50,6 +45,11 @@ public class EnsuredCryptSLPredicate {
 			if (other.predicate != null)
 				return false;
 		} else if (!predicate.equals(other.predicate))
+			return false;
+		if (location == null) {
+			if (other.location != null)
+				return false;
+		} else if (!location.equals(other.location))
 			return false;
 		return true;
 	}

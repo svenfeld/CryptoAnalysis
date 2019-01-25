@@ -88,7 +88,7 @@ public abstract class CryptoScanner {
 			estimateAnalysisTime();
 		}
 
-		predicateHandler.checkPredicates();
+		checkPredicates();
 
 		for (AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
 			if (seed.isSecure()) {
@@ -102,6 +102,30 @@ public abstract class CryptoScanner {
 //		debugger().afterAnalysis();
 	}
 
+
+	private void checkPredicates() {
+		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
+			seed.getParameterAnalysis().combineDataFlowsForRuleObjects();
+			getAnalysisListener().collectedValues(seed, seed.getParameterAnalysis().getCollectedValues());
+		}
+		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
+			seed.evaluateInternalConstraints();
+		}
+		checkMissingRequiredPredicates();
+	}
+
+	private void checkMissingRequiredPredicates() {
+		boolean hasPredicateRemoved = true;
+		while(hasPredicateRemoved) {
+			hasPredicateRemoved = false;
+			for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
+				hasPredicateRemoved |= seed.checkPredicates();
+			}
+		}
+	}
+
+	
+	
 	private void estimateAnalysisTime() {
 		int remaining = worklist.size();
 		solvedObject++;
@@ -183,7 +207,7 @@ public abstract class CryptoScanner {
 	public boolean hasRulesForType(Type parameterType) {
 		List<ClassSpecification> classSpecifictions = getClassSpecifictions();
 		for(ClassSpecification spec : classSpecifictions) {
-			if(Utils.getFullyQualifiedName(spec.getRule()).getType().equals(parameterType)) {
+			if(Scene.v().getSootClass(Utils.getFullyQualifiedName(spec.getRule())).getType().equals(parameterType)) {
 				return true;
 			}
 		}

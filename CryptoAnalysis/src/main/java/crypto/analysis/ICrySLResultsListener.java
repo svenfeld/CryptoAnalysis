@@ -2,6 +2,7 @@ package crypto.analysis;
 
 import com.google.common.collect.Multimap;
 
+import boomerang.ForwardQuery;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import boomerang.results.ForwardBoomerangResults;
@@ -19,7 +20,7 @@ public interface ICrySLResultsListener {
 	
 	void onSeedFinished(IAnalysisSeed seed, ForwardBoomerangResults<TransitionFunction> analysisResults);
 	
-	void collectedValues(AnalysisSeedWithSpecification seed, Multimap<CallSiteWithParamIndex, ExtractedValue> collectedValues);
+	void collectedValues(AnalysisSeedWithSpecification seed, Multimap<CallSiteWithParamIndex, ForwardQuery> collectedValues);
 
 	void discoveredSeed(IAnalysisSeed curr);
 
