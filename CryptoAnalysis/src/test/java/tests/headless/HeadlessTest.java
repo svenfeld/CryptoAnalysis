@@ -1,21 +1,14 @@
 package tests.headless;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
@@ -42,7 +35,6 @@ import crypto.extractparameter.ExtractedValue;
 import crypto.interfaces.ISLConstraint;
 import crypto.rules.CryptSLPredicate;
 import soot.G;
-import soot.Scene;
 import sync.pds.solver.nodes.Node;
 import test.IDEALCrossingTestingFramework;
 import typestate.TransitionFunction;
@@ -305,12 +297,6 @@ public class HeadlessTest {
 			public void collectedValues(AnalysisSeedWithSpecification seed,
 					Multimap<CallSiteWithParamIndex, ExtractedValue> collectedValues) {
 			}
-
-			@Override
-			public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification,
-					Collection<ISLConstraint> relConstraints) {
-			}
-
 			@Override
 			public void seedStarted(IAnalysisSeed analysisSeedWithSpecification) {
 			}
@@ -324,24 +310,9 @@ public class HeadlessTest {
 
 			}
 
-			@Override
-			public void beforePredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
-
-			@Override
-			public void beforeConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
 
 			@Override
 			public void beforeAnalysis() {
-			}
-
-			@Override
-			public void afterPredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
-
-			@Override
-			public void afterConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
 			}
 
 			@Override

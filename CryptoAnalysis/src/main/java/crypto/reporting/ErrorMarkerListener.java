@@ -127,29 +127,9 @@ public class ErrorMarkerListener extends CrySLAnalysisListener {
 	}
 
 	@Override
-	public void afterConstraintCheck(final AnalysisSeedWithSpecification arg0) {
-		// nothing
-	}
-
-	@Override
-	public void afterPredicateCheck(final AnalysisSeedWithSpecification arg0) {
-		// Nothing
-	}
-
-	@Override
 	public void beforeAnalysis() {
 		// Nothing
 
-	}
-
-	@Override
-	public void beforeConstraintCheck(final AnalysisSeedWithSpecification arg0) {
-		// Nothing
-	}
-
-	@Override
-	public void beforePredicateCheck(final AnalysisSeedWithSpecification arg0) {
-		// Nothing
 	}
 
 	@Override
@@ -159,11 +139,6 @@ public class ErrorMarkerListener extends CrySLAnalysisListener {
 
 	@Override
 	public void boomerangQueryStarted(final Query arg0, final BackwardQuery arg1) {
-		// Nothing
-	}
-
-	@Override
-	public void checkedConstraints(final AnalysisSeedWithSpecification arg0, final Collection<ISLConstraint> arg1) {
 		// Nothing
 	}
 

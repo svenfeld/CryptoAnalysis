@@ -7,13 +7,17 @@ import com.google.common.collect.Sets;
 
 import crypto.rules.CryptSLMethod;
 import crypto.rules.CryptSLRule;
+import crypto.typestate.CryptSLMethodToSootMethod;
+import soot.SootClass;
 import soot.SootMethod;
 
 public class Utils {
 
-	public static String getFullyQualifiedName(CryptSLRule r) {
+	public static SootClass getFullyQualifiedName(CryptSLRule r) {
 		for(CryptSLMethod l : r.getUsagePattern().getInitialTransition().getLabel()) {
-			return l.toString().substring(0, l.toString().lastIndexOf("."));
+			for(SootMethod m : CryptSLMethodToSootMethod.v().convert(l)) {
+				return m.getDeclaringClass();
+			}
 		}
 		
 		throw new RuntimeException("Could not get fully qualified class name for rule" + r);

@@ -1,18 +1,20 @@
 package crypto.analysis;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import com.google.inject.internal.util.Sets;
 
 import boomerang.Query;
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
+import crypto.Utils;
 import crypto.predicates.PredicateHandler;
 import crypto.rules.CryptSLRule;
 import crypto.typestate.CryptSLMethodToSootMethod;
@@ -21,6 +23,7 @@ import ideal.IDEALSeedSolver;
 import soot.MethodOrMethodContext;
 import soot.Scene;
 import soot.SootMethod;
+import soot.Type;
 import soot.Unit;
 import soot.jimple.toolkits.callgraph.ReachableMethods;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
@@ -85,11 +88,6 @@ public abstract class CryptoScanner {
 			estimateAnalysisTime();
 		}
 
-//		IDebugger<TypestateDomainValue<StateNode>> debugger = debugger();
-//		if (debugger instanceof CryptoVizDebugger) {
-//			CryptoVizDebugger ideVizDebugger = (CryptoVizDebugger) debugger;
-//			ideVizDebugger.addEnsuredPredicates(this.existingPredicates);
-//		}
 		predicateHandler.checkPredicates();
 
 		for (AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
@@ -180,5 +178,30 @@ public abstract class CryptoScanner {
 
 	public Collection<AnalysisSeedWithSpecification> getAnalysisSeeds() {
 		return this.seedsWithSpec.values();
+	}
+
+	public boolean hasRulesForType(Type parameterType) {
+		List<ClassSpecification> classSpecifictions = getClassSpecifictions();
+		for(ClassSpecification spec : classSpecifictions) {
+			if(Utils.getFullyQualifiedName(spec.getRule()).getType().equals(parameterType)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public Set<IAnalysisSeed> findSeedsForValAtStatement(Node<Statement,Val> node){
+		Set<IAnalysisSeed> res = Sets.newHashSet();
+		for(AnalysisSeedWithEnsuredPredicate seed : seedsWithoutSpec.values()) {
+			if(seed.reaches(node)) {
+				res.add(seed);
+			}
+		}
+		for(AnalysisSeedWithSpecification seed : seedsWithSpec.values()) {
+			if(seed.reaches(node)) {
+				res.add(seed);
+			}
+		}
+		return res;
 	}
 }

@@ -191,26 +191,6 @@ public class CSVReporter extends CrySLAnalysisListener {
 	}
 
 	@Override
-	public void beforeConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
-	public void afterConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
-	public void beforePredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
-	public void afterPredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
 	public void seedStarted(IAnalysisSeed analysisSeedWithSpecification) {
 		// TODO Auto-generated method stub
 		
@@ -235,11 +215,6 @@ public class CSVReporter extends CrySLAnalysisListener {
 			Table<Statement, IAnalysisSeed, Set<CryptSLPredicate>> expectedPredicates,
 			Table<Statement, IAnalysisSeed, Set<CryptSLPredicate>> missingPredicates) {
 		
-	}
-
-	@Override
-	public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification,
-			Collection<ISLConstraint> relConstraints) {
 	}
 
 	@Override

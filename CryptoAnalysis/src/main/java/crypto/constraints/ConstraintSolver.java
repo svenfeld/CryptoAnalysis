@@ -63,13 +63,13 @@ public class ConstraintSolver {
 	private Collection<CallSiteWithParamIndex> parameterAnalysisQuerySites;
 	private Multimap<CallSiteWithParamIndex, Type> propagatedTypes;
 
-	public ConstraintSolver(AnalysisSeedWithSpecification object, Collection<Statement> collectedCalls, CrySLResultsReporter crySLResultsReporter) {
+	public ConstraintSolver(AnalysisSeedWithSpecification object, CrySLResultsReporter crySLResultsReporter) {
 		this.object = object;
 		this.classSpec = object.getSpec();
 		this.parsAndVals = object.getParameterAnalysis().getCollectedValues();
 		this.propagatedTypes = object.getParameterAnalysis().getPropagatedTypes();
 		this.parameterAnalysisQuerySites = object.getParameterAnalysis().getAllQuerySites();
-		this.collectedCalls = collectedCalls;
+		this.collectedCalls = object.getAllCallsOnObject().keySet();
 		this.allConstraints = this.classSpec.getRule().getConstraints();
 		this.relConstraints = new ArrayList<ISLConstraint>();
 		for (ISLConstraint cons : allConstraints) {

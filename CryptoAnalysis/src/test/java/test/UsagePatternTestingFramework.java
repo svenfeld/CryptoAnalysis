@@ -253,42 +253,12 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 
 
 							@Override
-							public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification,
-									Collection<ISLConstraint> relConstraints) {
-								
-							}
-
-							@Override
 							public void beforeAnalysis() {
 								
 							}
 
 							@Override
 							public void afterAnalysis() {
-								
-							}
-
-							@Override
-							public void beforeConstraintCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
-							}
-
-							@Override
-							public void afterConstraintCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
-							}
-
-							@Override
-							public void beforePredicateCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
-							}
-
-							@Override
-							public void afterPredicateCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
 								
 							}
 
@@ -357,7 +327,7 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 	public List<String> excludedPackages() {
 		List<String> excludedPackages = super.excludedPackages();
 		for(CryptSLRule r : getRules(false)) {
-			excludedPackages.add(Utils.getFullyQualifiedName(r));
+			excludedPackages.add(Utils.getFullyQualifiedName(r).toString());
 		}
 		return excludedPackages;
 	}

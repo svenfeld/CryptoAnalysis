@@ -50,7 +50,7 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 			return;
 
 		for(Cell<Statement, Val, TransitionFunction> c : analysisResults.asStatementValWeightTable().cellSet()){
-			predicateHandler.addNewPred(this,c.getRowKey(), c.getColumnKey(), pred);
+			predicateHandler.addPotentialPredicate(this,c.getRowKey(), c.getColumnKey(), pred);
 		}
 	}
 
@@ -100,5 +100,9 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 	@Override
 	public String toString() {
 		return "AnalysisSeedWithEnsuredPredicate:"+this.asNode() +" " + ensuredPredicates; 
+	}
+
+	public boolean reaches(Node<Statement, Val> node) {
+		return analysisResults != null && analysisResults.asStatementValWeightTable().row(node.stmt()).containsKey(node.fact());
 	}
 }

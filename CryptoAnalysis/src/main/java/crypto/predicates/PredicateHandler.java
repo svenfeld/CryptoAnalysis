@@ -32,6 +32,7 @@ import crypto.analysis.ResultsHandler;
 import crypto.analysis.errors.PredicateContradictionError;
 import crypto.analysis.errors.RequiredPredicateError;
 import crypto.boomerang.CogniCryptBoomerangOptions;
+import crypto.constraints.ConstraintSolver;
 import crypto.extractparameter.CallSiteWithExtractedValue;
 import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.interfaces.ISLConstraint;
@@ -140,7 +141,7 @@ public class PredicateHandler {
 		this.cryptoScanner = cryptoScanner;
 	}
 
-	public boolean addNewPred(IAnalysisSeed seedObj, Statement statement, Val variable, EnsuredCryptSLPredicate ensPred) {
+	public boolean addPotentialPredicate(IAnalysisSeed seedObj, Statement statement, Val variable, EnsuredCryptSLPredicate ensPred) {
 		Set<EnsuredCryptSLPredicate> set = getExistingPredicates(statement, variable);
 		boolean added = set.add(ensPred);
 		assert existingPredicates.get(statement, variable).contains(ensPred);
@@ -185,7 +186,6 @@ public class PredicateHandler {
 				if (paramMatch) {
 					for(AnalysisSeedWithSpecification secondSeed : Lists.newArrayList(cryptoScanner.getAnalysisSeeds())) {
 						secondSeed.registerResultsHandler(new AddPredicateToOtherSeed(statement, base, callerMethod, ensPred, secondSeed));
-						
 					}
 				}
 			}
@@ -205,10 +205,17 @@ public class PredicateHandler {
 
 
 	public void checkPredicates() {
+		checkAllConstraints();
 		checkMissingRequiredPredicates();
 		checkForContradictions();
 		cryptoScanner.getAnalysisListener().ensuredPredicates(this.existingPredicates, expectedPredicateObjectBased, computeMissingPredicates());
 	}
+	private void checkAllConstraints() {
+		for(AnalysisSeedWithSpecification seed : cryptoScanner.getAnalysisSeeds()) {
+			new ConstraintSolver(seed, cryptoScanner.getAnalysisListener());
+		}
+	}
+
 	private void checkMissingRequiredPredicates() {
 		for (AnalysisSeedWithSpecification seed : cryptoScanner.getAnalysisSeeds()) {
 			Set<RequiredCryptSLPredicate> missingPredicates = seed.getMissingPredicates();

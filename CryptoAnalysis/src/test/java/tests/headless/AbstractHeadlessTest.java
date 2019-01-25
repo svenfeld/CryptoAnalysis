@@ -147,11 +147,6 @@ public abstract class AbstractHeadlessTest {
 			}
 
 			@Override
-			public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification,
-					Collection<ISLConstraint> relConstraints) {
-			}
-
-			@Override
 			public void seedStarted(IAnalysisSeed analysisSeedWithSpecification) {
 			}
 
@@ -165,24 +160,9 @@ public abstract class AbstractHeadlessTest {
 			}
 
 			@Override
-			public void beforePredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
-
-			@Override
-			public void beforeConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
-
-			@Override
 			public void beforeAnalysis() {
 			}
 
-			@Override
-			public void afterPredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
-
-			@Override
-			public void afterConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-			}
 
 			@Override
 			public void afterAnalysis() {
