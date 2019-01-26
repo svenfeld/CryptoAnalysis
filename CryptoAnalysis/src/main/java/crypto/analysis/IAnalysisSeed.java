@@ -86,5 +86,5 @@ public abstract class IAnalysisSeed extends WeightedForwardQuery<TransitionFunct
 			}
 		}
 	}
-	
+	public abstract void addPredicateStartingFrom(Statement currStmt, RequiredCryptSLPredicate requiredCryptSLPredicate);
 }

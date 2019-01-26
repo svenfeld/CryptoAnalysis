@@ -256,9 +256,7 @@ public abstract class CryptoScanner {
 				};
 				BackwardQuery bwQ = new BackwardQuery(new Statement((Stmt) pred, node.stmt().getMethod()), node.fact());
 				BackwardBoomerangResults<NoWeight> res = boomerang.solve(bwQ);
-				System.out.println(bwQ);
 				for(ForwardQuery q : res.getAllocationSites().keySet()) {
-					System.out.println(q);
 					results.addAll(findSeedsFor(q));
 					if(results.isEmpty()) {
 						AnalysisSeedWithEnsuredPredicate analysisSeedWithEnsuredPredicate = new AnalysisSeedWithEnsuredPredicate(this, q.asNode(), res.asStatementValWeightTable(q));

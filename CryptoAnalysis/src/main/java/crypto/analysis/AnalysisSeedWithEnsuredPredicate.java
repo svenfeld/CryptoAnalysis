@@ -2,6 +2,7 @@ package crypto.analysis;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
+import com.google.common.collect.Table.Cell;
 
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
@@ -26,11 +27,13 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 
 	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate) {
 		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
+		this.ensuresPredicates = true;
 	}
 
 	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate, Table<Statement, Val, ? extends Weight> results) {
 		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
 		this.analysisResults = results;
+		this.ensuresPredicates = true;
 	}
 	
 	@Override
@@ -85,4 +88,16 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 	public boolean reaches(Node<Statement, Val> node) {
 		return analysisResults != null && analysisResults.row(node.stmt()).containsKey(node.fact());
 	}
+
+	@Override
+	public void addPredicateStartingFrom(Statement currStmt, RequiredCryptSLPredicate requiredCryptSLPredicate) {
+		if(analysisResults == null)
+			return;
+		for (Cell<Statement, Val, ? extends Weight> e : analysisResults.cellSet()) {
+			ensuredPredicatesAtStatement.put(e.getRowKey(), new RequiredCryptSLPredicate(requiredCryptSLPredicate.getPred(), e.getRowKey()));
+		}
+	}
+	
+	
+	
 }

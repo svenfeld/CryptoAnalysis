@@ -10,17 +10,12 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import boomerang.BackwardQuery;
-import boomerang.Boomerang;
 import boomerang.ForwardQuery;
 import boomerang.jimple.AllocVal;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
-import boomerang.results.BackwardBoomerangResults;
-import crypto.analysis.AnalysisSeedWithEnsuredPredicate;
-import crypto.analysis.AnalysisSeedWithSpecification;
 import crypto.analysis.CryptoScanner;
 import crypto.analysis.IAnalysisSeed;
-import crypto.boomerang.CogniCryptIntAndStringBoomerangOptions;
 import crypto.rules.CryptSLMethod;
 import crypto.typestate.CryptSLMethodToSootMethod;
 import crypto.typestate.LabeledMatcherTransition;
@@ -28,13 +23,9 @@ import crypto.typestate.SootBasedStateMachineGraph;
 import soot.Local;
 import soot.SootMethod;
 import soot.Type;
-import soot.Unit;
 import soot.Value;
-import soot.jimple.Stmt;
-import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
 import sync.pds.solver.nodes.Node;
 import typestate.finiteautomata.MatcherTransition;
-import wpds.impl.Weight.NoWeight;
 
 public class ExtractParameterAnalysis {
 
@@ -154,11 +145,9 @@ public class ExtractParameterAnalysis {
 		CallSiteWithParamIndex callSiteWithParamIndex = new CallSiteWithParamIndex(stmt, queryVal, index,
 				varNameInSpecification);
 		collectedValues.putAll(callSiteWithParamIndex, seeds);
-		System.out.println("call" +callSiteWithParamIndex);
 		
 		//Logic differs from before here
 		for(IAnalysisSeed s : seeds) {
-			System.out.println("originates " +s);
 			propagatedTypes.put(callSiteWithParamIndex, s.getType());
 		}
 	}

@@ -130,20 +130,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	@Override
 	public void addPredicatesOnOtherObjects() {
 		generatePredicateForThis();
-		for(Cell<Statement, Val, TransitionFunction> c : results.asStatementValWeightTable().cellSet()){
-			for(CryptSLPredicate p : potentialPredicates) {
-				ensuredPredicatesAtStatement.put(c.getRowKey(), new RequiredCryptSLPredicate(p, c.getRowKey()));
-			}
-		}
-		for(Cell<IAnalysisSeed, CryptSLPredicate, Statement> s : generatedPredicates.cellSet()) {
-			s.getRowKey().addPotentiallyEnsuredPredicate(s.getColumnKey());
-			s.getRowKey().addPredicatesOnOtherObjects();
-			System.out.println("this " + this);
-			System.out.println("generates " + s.getColumnKey());
-			System.out.println("for " + s.getRowKey());
-			if(s.getRowKey() instanceof AnalysisSeedWithEnsuredPredicate || /*?*/s.getRowKey().toString().contains("SecretKey"))
-				s.getRowKey().ensuresPredicates = true;
-		}
+		
 	}
 
 	private void runTypestateAnalysis() {
@@ -247,6 +234,13 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 					for (ICryptSLPredicateParameter predicateParam : potentialPredicate.getParameters()) {
 						if (predicateParam.getName().equals("this")) {
 							expectPredicateWhenThisObjectIsInState(stateNode, currStmt, potentialPredicate);
+						} else {
+							for(Cell<IAnalysisSeed, CryptSLPredicate, Statement> s : generatedPredicates.cellSet()) {
+								if(s.getValue().equals(currStmt)) {
+									System.out.println("Add Predicate for " + s.getRowKey());
+									s.getRowKey().addPredicateStartingFrom(currStmt,new RequiredCryptSLPredicate(s.getColumnKey(), currStmt));
+								}
+							}
 						}
 					}
 				}
@@ -285,11 +279,9 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 									new AnalysisSeedWithSpecification(cryptoScanner, currStmt, val, spec));
 							//What about the predicate?
 							if(spec.getRule().toString().contains("SecretKey")) {
-								seed.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
+//								seed.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
 							}
 							
-							System.out.println(this);
-							System.out.println("FlowsTo " + seed);
 							generatedPredicates.put(seed, potentialPredicate, currStmt);
 							matched = true;
 						}
@@ -298,9 +290,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 				if(!matched) {
 					AnalysisSeedWithEnsuredPredicate seed = cryptoScanner
 							.getOrCreateSeed(new Node<Statement, Val>(currStmt, val));
-
-					System.out.println(this);
-					System.out.println("FlowsTo " + seed);
 					generatedPredicates.put(seed, potentialPredicate,currStmt);
 				}
 			}
@@ -315,9 +304,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 						// Would need another fix-point iteration
 						Set<IAnalysisSeed> seeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(currStmt,val), true);
 						for(IAnalysisSeed s : seeds) {
-							System.out.println(this);
-							System.out.println("FlowsTo " + s);
-							System.out.println("FlowsTo " + potentialPredicate);
 							generatedPredicates.put(s, potentialPredicate,currStmt);
 						}
 					}
@@ -608,4 +594,35 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		return internalConstraintSatisfied && super.hasEnsuredPredicate(pred);
 	}
 
+	@Override
+	public void addPredicateStartingFrom(Statement currStmt, RequiredCryptSLPredicate requiredCryptSLPredicate) {
+		Collection<? extends State> states = getStatesAtStatement(currStmt);
+		for(State state : states) {
+			for(Statement s : getStatementsWithState(state)) {
+				ensuredPredicatesAtStatement.put(s, new RequiredCryptSLPredicate(requiredCryptSLPredicate.getPred(), s));
+			}
+		}
+	}
+
+	private Set<Statement> getStatementsWithState(State state) {
+		Set<Statement> res = Sets.newHashSet();
+		for(Cell<Statement, Val, TransitionFunction> c : results.asStatementValWeightTable().cellSet()) {
+			Collection<? extends State> targetStates = getTargetStates(c.getValue());
+			if(targetStates.contains(state)) {
+				res.add(c.getRowKey());
+			}
+		}
+		return res;
+	}
+
+	private Collection<? extends State> getStatesAtStatement(Statement currStmt) {
+		Map<Val, TransitionFunction> row = results.asStatementValWeightTable().row(currStmt);
+		Collection<State> states = Sets.newHashSet();
+		for(TransitionFunction weight : row.values()) {
+			states.addAll(getTargetStates(weight));
+		}
+		return states;
+	}
+	
 }
+
