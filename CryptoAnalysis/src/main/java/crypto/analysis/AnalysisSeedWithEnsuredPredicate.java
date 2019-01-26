@@ -1,17 +1,11 @@
 package crypto.analysis;
 
-import java.util.Set;
-
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
-import com.google.common.collect.Table.Cell;
 
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
-import boomerang.results.ForwardBoomerangResults;
-import crypto.rules.CryptSLPredicate;
 import crypto.rules.StateMachineGraph;
 import crypto.rules.StateNode;
 import crypto.rules.TransitionEdge;
@@ -45,12 +39,6 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 		ExtendedIDEALAnaylsis solver = getOrCreateAnalysis();
 		solver.run(this);
 		analysisResults = solver.getResults().asStatementValWeightTable();
-
-		if(analysisResults == null)
-			return;
-
-		addPotentialPredicates();
-		
 	}
 
 	private ExtendedIDEALAnaylsis getOrCreateAnalysis() {
@@ -91,7 +79,7 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 
 	@Override
 	public String toString() {
-		return "AnalysisSeedWithEnsuredPredicate:"+this.asNode() +" " + ensuredPredicates; 
+		return "AnalysisSeedWithEnsuredPredicate:"+this.asNode() +" "; 
 	}
 
 	public boolean reaches(Node<Statement, Val> node) {

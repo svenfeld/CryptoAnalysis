@@ -31,7 +31,6 @@ public abstract class IAnalysisSeed extends WeightedForwardQuery<TransitionFunct
 	protected final CryptoScanner cryptoScanner;
 	protected final PredicateHandler predicateHandler;
 	private String objectId;
-	protected final Set<RequiredCryptSLPredicate> ensuredPredicates = Sets.newHashSet();
 	protected final Set<CryptSLPredicate> potentialPredicates = Sets.newHashSet();
 	protected final Multimap<ForwardQuery,RequiredCryptSLPredicate> requiredPredicates = HashMultimap.create();
 	protected final Multimap<Statement,RequiredCryptSLPredicate> ensuredPredicatesAtStatement = HashMultimap.create();
@@ -78,12 +77,11 @@ public abstract class IAnalysisSeed extends WeightedForwardQuery<TransitionFunct
 		potentialPredicates.add(potentialPredicate);
 	}
 	
-	public void addPotentialPredicates() {
+	public void addPredicatesOnOtherObjects() {
 		if(analysisResults == null)
 			return;
 		for(Cell<Statement, Val, ? extends Weight> c : analysisResults.cellSet()){
 			for(CryptSLPredicate p : potentialPredicates) {
-				ensuredPredicates.add(new RequiredCryptSLPredicate(p, c.getRowKey()));
 				ensuredPredicatesAtStatement.put(c.getRowKey(), new RequiredCryptSLPredicate(p, c.getRowKey()));
 			}
 		}

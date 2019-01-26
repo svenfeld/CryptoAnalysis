@@ -308,6 +308,18 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		Assertions.mustBeInAcceptingState(cCipher);
 		cCipher.getIV();
 	}
+	
+	@Test
+	public void UsagePatternTestIVCorMin() throws GeneralSecurityException {
+		KeyGenerator keygen = KeyGenerator.getInstance("AES");
+		Assertions.extValue(0);
+		keygen.init(128);
+		Assertions.extValue(0);
+		SecretKey key = keygen.generateKey();
+
+		Assertions.hasEnsuredPredicate(key);
+		Assertions.mustBeInAcceptingState(keygen);
+	}
 
 	@Test
 	public void UsagePatternTestIVInCor() throws GeneralSecurityException {
@@ -971,6 +983,7 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		md = MessageDigest.getInstance("MD5");
 		output = md.digest(input2);
 		Assertions.mustBeInAcceptingState(md);
+		//Probably not checkable as we kill the predicate here
 		Assertions.notHasEnsuredPredicate(input2);
 		Assertions.notHasEnsuredPredicate(output);
 	}

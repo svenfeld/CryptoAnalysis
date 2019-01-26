@@ -127,25 +127,22 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	}
 
 
-
-	//Is this only necessary for SecretKey key = keygen.generateKey(); because no rules say we got to start here. In which state to start?
 	@Override
-	public void addPotentialPredicates() {
+	public void addPredicatesOnOtherObjects() {
+		generatePredicateForThis();
 		for(Cell<Statement, Val, TransitionFunction> c : results.asStatementValWeightTable().cellSet()){
 			for(CryptSLPredicate p : potentialPredicates) {
-				ensuredPredicates.add(new RequiredCryptSLPredicate(p, c.getRowKey()));
 				ensuredPredicatesAtStatement.put(c.getRowKey(), new RequiredCryptSLPredicate(p, c.getRowKey()));
 			}
 		}
 		for(Cell<IAnalysisSeed, CryptSLPredicate, Statement> s : generatedPredicates.cellSet()) {
 			s.getRowKey().addPotentiallyEnsuredPredicate(s.getColumnKey());
-			s.getRowKey().addPotentialPredicates();
+			s.getRowKey().addPredicatesOnOtherObjects();
 			System.out.println("this " + this);
 			System.out.println("generates " + s.getColumnKey());
 			System.out.println("for " + s.getRowKey());
-			if(s.getRowKey() instanceof AnalysisSeedWithEnsuredPredicate) {
-				((AnalysisSeedWithEnsuredPredicate) s.getRowKey()).ensuresPredicates = true;
-			}
+			if(s.getRowKey() instanceof AnalysisSeedWithEnsuredPredicate || /*?*/s.getRowKey().toString().contains("SecretKey"))
+				s.getRowKey().ensuresPredicates = true;
 		}
 	}
 
@@ -234,13 +231,32 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	}
 	
 
-	private void triggerNewDataFlowForPotenialPredicate(Statement currStmt, State stateNode, CryptSLPredicate potentialPredicate) {
-//		//This logic is wrong here.
-		for (ICryptSLPredicateParameter predicateParam : potentialPredicate.getParameters()) {
-			if (predicateParam.getName().equals("this")) {
-				expectPredicateWhenThisObjectIsInState(stateNode, currStmt, potentialPredicate);
+	private void generatePredicateForThis(){
+		for(Entry<Statement, State> e: typeStateChange.entries()){
+			Statement currStmt = e.getKey();
+			State stateNode = e.getValue();
+			for (CryptSLPredicate potentialPredicate : spec.getRule().getPredicates()) {
+				if (potentialPredicate.isNegated()) {
+					continue;
+				}
+
+				if (!currStmt.isCallsite()) {
+					continue;
+				}
+				if (isPotentiallyPredicateGeneratingState(potentialPredicate, stateNode)) {
+					for (ICryptSLPredicateParameter predicateParam : potentialPredicate.getParameters()) {
+						if (predicateParam.getName().equals("this")) {
+							expectPredicateWhenThisObjectIsInState(stateNode, currStmt, potentialPredicate);
+						}
+					}
+				}
 			}
 		}
+	}
+	
+	private void triggerNewDataFlowForPotenialPredicate(Statement currStmt, State stateNode, CryptSLPredicate potentialPredicate) {
+//		//This logic is wrong here.
+		
 		System.out.println(currStmt + " " + this) ;
 		InvokeExpr ie = ((Stmt) currStmt.getUnit().get()).getInvokeExpr();
 		SootMethod invokedMethod = ie.getMethod();
@@ -331,7 +347,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			return;
 		for (Cell<Statement, Val, TransitionFunction> e : results.asStatementValWeightTable().cellSet()) {
 			if (containsTargetState(e.getValue(), stateNode)) {
-				ensuredPredicates.add(new RequiredCryptSLPredicate(potentialPredicate,  e.getRowKey()));
 				ensuredPredicatesAtStatement.put(e.getRowKey(), new RequiredCryptSLPredicate(potentialPredicate, e.getRowKey()));
 			}
 		}
@@ -392,7 +407,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		ensuresPredicates = allRequiredPredicatesFullFilled;
 		//Does that makes sense?
 		if(ensuresPredicates)
-			addPotentialPredicates();
+			addPredicatesOnOtherObjects();
 		return changed || ensuresPredicates;
 	}
 
