@@ -103,14 +103,9 @@ public class ConstraintSolver {
 						CallSiteWithParamIndex cwpi = e.getKey();
 						if (cwpi.getVarName().equals(pred.getParameters().get(0).getName())) {
 							relConstraints.add(pred);
+							System.out.println("Adding predicate " + pred);
+							System.out.println("to predicate " + seed);
 							seed.addRequiredPredicate(e.getValue(), new RequiredCryptSLPredicate(pred, cwpi.stmt()));
-							if(e.getValue() instanceof IAnalysisSeed) {
-
-							} else {
-								//TODO No predicate found.... error?
-//								predicateHandler.addMissindPredicate(new MissingPre)
-								
-							}
 						}
 					}
 				} else {

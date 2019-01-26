@@ -95,6 +95,11 @@ public class CogniCryptIntAndStringBoomerangOptions extends IntAndStringBoomeran
 	}
 
     @Override
+    public boolean trackNullAssignments() {
+    		return true;
+    }
+    
+    @Override
     public boolean onTheFlyCallGraph() {
         return false;
     }

@@ -558,16 +558,30 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		SecretKey key = keygen.generateKey();
 		Assertions.mustBeInAcceptingState(keygen);
 		Assertions.notHasEnsuredPredicate(key);
-
+		
 		Cipher cCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		Assertions.extValue(0);
 		cCipher.init(Cipher.ENCRYPT_MODE, key, encRand);
+		
 		Assertions.extValue(0);
 		byte[] encText = cCipher.doFinal("".getBytes());
 		Assertions.mustBeInAcceptingState(cCipher);
 		Assertions.notHasEnsuredPredicate(encText);
 	}
 
+	@Test
+	public void UsagePatternTest7c() throws GeneralSecurityException {
+		SecureRandom encRand = SecureRandom.getInstanceStrong();
+
+		KeyGenerator keygen = KeyGenerator.getInstance("AES");
+		Assertions.extValue(0);
+		keygen.init(128, null);
+		Assertions.extValue(0);
+		SecretKey key = keygen.generateKey();
+		Assertions.mustBeInAcceptingState(keygen);
+		Assertions.notHasEnsuredPredicate(key);
+	}
+	
 	@Test
 	public void UsagePatternForbMeth() throws GeneralSecurityException, IOException {
 		char[] falsePwd = "password".toCharArray();
@@ -937,6 +951,7 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		md.reset();
 		md.update(input2);
 		Assertions.mustNotBeInAcceptingState(md);
+		//Probably not checkable as we kill the predicate here
 		Assertions.notHasEnsuredPredicate(input2);
 		Assertions.hasEnsuredPredicate(output);
 		md.digest();

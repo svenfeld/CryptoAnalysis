@@ -64,8 +64,8 @@ public abstract class IAnalysisSeed extends WeightedForwardQuery<TransitionFunct
 		return this.objectId;
 		
 	}
-	public boolean hasEnsuredPredicate(Statement stmt) {
-		return ensuresPredicates && ensuredPredicatesAtStatement.keySet().contains(stmt);
+	public boolean hasEnsuredPredicate(RequiredCryptSLPredicate requiredCryptSLPredicate) {
+		return ensuresPredicates && ensuredPredicatesAtStatement.get(requiredCryptSLPredicate.getLocation()).contains(requiredCryptSLPredicate);
 	}
 
 	public Collection<RequiredCryptSLPredicate> getPredicatesAtStatement(Statement s){

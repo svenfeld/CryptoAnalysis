@@ -268,10 +268,10 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 							AnalysisSeedWithSpecification seed = cryptoScanner.getOrCreateSeedWithSpec(
 									new AnalysisSeedWithSpecification(cryptoScanner, currStmt, val, spec));
 							//What about the predicate?
-//							if(spec.getRule().toString().contains("SecretKey")) {
-//								seed.addPotentiallyEnsuredPredicate(potentialPredicate);
-//							}
-
+							if(spec.getRule().toString().contains("SecretKey")) {
+								seed.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
+							}
+							
 							System.out.println(this);
 							System.out.println("FlowsTo " + seed);
 							generatedPredicates.put(seed, potentialPredicate, currStmt);
@@ -301,6 +301,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 						for(IAnalysisSeed s : seeds) {
 							System.out.println(this);
 							System.out.println("FlowsTo " + s);
+							System.out.println("FlowsTo " + potentialPredicate);
 							generatedPredicates.put(s, potentialPredicate,currStmt);
 						}
 					}
@@ -358,16 +359,27 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			return false;
 		}
 		boolean changed = false;
+		System.out.println("=====REQUIRED=====");
+		System.out.println("this" + this);
+		System.out.println("this" + this);
 		Multimap<ForwardQuery, RequiredCryptSLPredicate> removablePredicate = HashMultimap.create();
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
+			System.out.println(e);
 			if(e.getKey() instanceof IAnalysisSeed) {
 				IAnalysisSeed iAnalysisSeed = (IAnalysisSeed) e.getKey();
-				if(!e.getValue().getPred().isNegated() && iAnalysisSeed.hasEnsuredPredicate(e.getValue().getLocation())) {
+				if(!e.getValue().getPred().isNegated() && iAnalysisSeed.hasEnsuredPredicate(e.getValue())) {
+					System.out.println("iAnalysiSeed has pred");
+					System.out.println(iAnalysisSeed);
+					System.out.println(e.getValue());
+					System.out.println("and is removed from");
+					System.out.println(this);
 					removablePredicate.put(e.getKey(), e.getValue());
 					changed = true;
 				}
 			}
 		}
+
+		System.out.println("==============");
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : removablePredicate.entries()) {
 			this.requiredPredicates.remove(e.getKey(), e.getValue());	
 		}
@@ -378,8 +390,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			}
 		}
 		ensuresPredicates = allRequiredPredicatesFullFilled;
-		System.out.println("this " + this);
-		System.out.println("has required " + requiredPredicates);
 		//Does that makes sense?
 		if(ensuresPredicates)
 			addPotentialPredicates();
@@ -579,8 +589,8 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		requiredPredicates.put(requiringObjectAllocation, requiredCryptSLPredicate);
 	}
 	@Override
-	public boolean hasEnsuredPredicate(Statement value) {
-		return internalConstraintSatisfied && super.hasEnsuredPredicate(value);
+	public boolean hasEnsuredPredicate(RequiredCryptSLPredicate pred) {
+		return internalConstraintSatisfied && super.hasEnsuredPredicate(pred);
 	}
 
 }
