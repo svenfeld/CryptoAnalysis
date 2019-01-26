@@ -58,9 +58,20 @@ public class PBEKeySpecTest  extends IDEALCrossingTestingFramework {
 		final PBEKeySpec pbe = new PBEKeySpec(new char[] {'p','a','s','s','w','o','r','d'}, new byte[32], 65000, 128);
 		pbe.clearPassword();
 		Assertions.assertState(pbe, 1);
+		Assertions.notInState(pbe,0);
 	}
 	
 
+	@Test
+	public void PBEKeySpecTestAlias() throws NoSuchAlgorithmException {
+		final PBEKeySpec pbe = new PBEKeySpec(new char[] {'p','a','s','s','w','o','r','d'}, new byte[32], 65000, 128);
+		PBEKeySpec x = pbe;
+		x.clearPassword();
+		Assertions.assertState(pbe, 1);
+		Assertions.assertState(x, 1);
+		Assertions.notInState(x,0);
+		Assertions.notInState(pbe,0);
+	}
 
 	@Test
 	public void PBEKeySpecTest2a() throws NoSuchAlgorithmException {

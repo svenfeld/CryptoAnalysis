@@ -339,15 +339,21 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 	
 
-	private void expectPredicateWhenThisObjectIsInState(State stateNode, Statement currStmt,
+	private void expectPredicateWhenThisObjectIsInState(State state, Statement currStmt,
 			CryptSLPredicate potentialPredicate) {
 		if (results == null)
 			return;
-		for (Cell<Statement, Val, TransitionFunction> e : results.asStatementValWeightTable().cellSet()) {
-			if (containsTargetState(e.getValue(), stateNode)) {
-				ensuredPredicatesAtStatement.put(e.getRowKey(), new RequiredCryptSLPredicate(potentialPredicate, e.getRowKey()));
-			}
+		System.out.println("GENERATING STATE " + state);
+		for(Statement s : getStatementsWithState(state)) {
+			ensuredPredicatesAtStatement.put(s, new RequiredCryptSLPredicate(potentialPredicate, s));
 		}
+//		for (Cell<Statement, Val, TransitionFunction> e : results.asStatementValWeightTable().cellSet()) {
+//			if(!e.getRowKey().equals(currStmt))
+//				continue;
+//			if (containsTargetState(e.getValue(), stateNode)) {
+//				ensuredPredicatesAtStatement.put(e.getRowKey(), new RequiredCryptSLPredicate(potentialPredicate, e.getRowKey()));
+//			}
+//		}
 	}
 
 	private boolean containsTargetState(TransitionFunction value, State stateNode) {

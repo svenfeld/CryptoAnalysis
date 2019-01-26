@@ -762,6 +762,7 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		Assertions.mustNotBeInAcceptingState(pbekeyspec);
 		Assertions.hasEnsuredPredicate(pbekeyspec);
 		pbekeyspec.clearPassword();
+		int x = 1;
 		Assertions.notHasEnsuredPredicate(pbekeyspec);
 	}
 
@@ -1016,21 +1017,7 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		return MessageDigest.getInstance("SHA-256");
 	}
 	
-	
-	@Test
-	public void clearPasswordPredicateTest2() throws NoSuchAlgorithmException, GeneralSecurityException {
-		  String password = "test";
-		  byte[] salt = {15, -12, 94, 0, 12, 3, -65, 73, -1, -84, -35};
-		  PBEKeySpec pBEKeySpec = new PBEKeySpec(password.toCharArray(), salt, 10000, 256);
 
-		  SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithSHA256");
-		  Assertions.extValue(0);
-		  Assertions.notHasEnsuredPredicate(pBEKeySpec);
-		  SecretKey generateSecret = secretKeyFactory.generateSecret(pBEKeySpec);
-		  Assertions.notHasEnsuredPredicate(generateSecret);
-		  byte[] keyMaterial = generateSecret.getEncoded();
-		  Assertions.notHasEnsuredPredicate(keyMaterial);
-	}
 	
 	@Test
 	public void setEntryKeyStore() throws GeneralSecurityException, IOException {
