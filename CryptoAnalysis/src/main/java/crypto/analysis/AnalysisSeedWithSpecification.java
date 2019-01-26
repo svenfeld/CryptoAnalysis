@@ -241,6 +241,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 				expectPredicateWhenThisObjectIsInState(stateNode, currStmt, potentialPredicate);
 			}
 		}
+		System.out.println(currStmt + " " + this) ;
 		InvokeExpr ie = ((Stmt) currStmt.getUnit().get()).getInvokeExpr();
 		SootMethod invokedMethod = ie.getMethod();
 		Collection<CryptSLMethod> convert = CryptSLMethodToSootMethod.v().convert(invokedMethod);
@@ -271,14 +272,19 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 //								seed.addPotentiallyEnsuredPredicate(potentialPredicate);
 //							}
 
+							System.out.println(this);
+							System.out.println("FlowsTo " + seed);
 							generatedPredicates.put(seed, potentialPredicate, currStmt);
+							matched = true;
 						}
-						matched = true;
 					}
 				}
 				if(!matched) {
 					AnalysisSeedWithEnsuredPredicate seed = cryptoScanner
 							.getOrCreateSeed(new Node<Statement, Val>(currStmt, val));
+
+					System.out.println(this);
+					System.out.println("FlowsTo " + seed);
 					generatedPredicates.put(seed, potentialPredicate,currStmt);
 				}
 			}
