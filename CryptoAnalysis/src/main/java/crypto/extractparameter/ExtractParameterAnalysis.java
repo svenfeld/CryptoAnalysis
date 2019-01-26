@@ -154,9 +154,11 @@ public class ExtractParameterAnalysis {
 		CallSiteWithParamIndex callSiteWithParamIndex = new CallSiteWithParamIndex(stmt, queryVal, index,
 				varNameInSpecification);
 		collectedValues.putAll(callSiteWithParamIndex, seeds);
+		System.out.println("call" +callSiteWithParamIndex);
 		
 		//Logic differs from before here
 		for(IAnalysisSeed s : seeds) {
+			System.out.println("originates " +s);
 			propagatedTypes.put(callSiteWithParamIndex, s.getType());
 		}
 	}

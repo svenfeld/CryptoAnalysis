@@ -282,7 +282,6 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 					if(e instanceof EnsuredPredicateAssertion){
 						EnsuredPredicateAssertion assertion = (EnsuredPredicateAssertion) e;
 						Node<Statement,Val> node = new Node<Statement,Val>(assertion.getStmt(),assertion.getAccessGraph());
-						System.out.println(node);
 						Set<IAnalysisSeed> seeds = scanner.findSeedsForValAtStatement(node, false);
 						for(IAnalysisSeed s : seeds) {
 							for(RequiredCryptSLPredicate pred : s.getPredicatesAtStatement(assertion.getStmt())) {

@@ -227,11 +227,10 @@ public abstract class CryptoScanner {
 	}
 	
 	public Set<IAnalysisSeed> findSeedsForValAtStatement(Node<Statement,Val> node, boolean triggerQuery){
-		if(triggerQuery) {
-			triggerBackwardQuery(node);
-		}
-		
 		Set<IAnalysisSeed> res = Sets.newHashSet();
+		if(triggerQuery) {
+			res.addAll(triggerBackwardQuery(node));
+		}
 		for(AnalysisSeedWithEnsuredPredicate seed : seedsWithoutSpec.values()) {
 			if(seed.reaches(node)) {
 				res.add(seed);
@@ -245,7 +244,8 @@ public abstract class CryptoScanner {
 		return res;
 	}
 
-	private void triggerBackwardQuery(Node<Statement, Val> node) {
+	private Set<IAnalysisSeed> triggerBackwardQuery(Node<Statement, Val> node) {
+		Set<IAnalysisSeed> results = Sets.newHashSet();
 		if(boomerangQueries.add(node)) {
 			for (Unit pred : icfg().getPredsOf(node.stmt().getUnit().get())) {
 				Boomerang boomerang = new Boomerang(new CogniCryptIntAndStringBoomerangOptions()) {
@@ -256,16 +256,18 @@ public abstract class CryptoScanner {
 				};
 				BackwardQuery bwQ = new BackwardQuery(new Statement((Stmt) pred, node.stmt().getMethod()), node.fact());
 				BackwardBoomerangResults<NoWeight> res = boomerang.solve(bwQ);
-				
+				System.out.println(bwQ);
 				for(ForwardQuery q : res.getAllocationSites().keySet()) {
-					Set<IAnalysisSeed> matchingSeeds = findSeedsFor(q);
-					if(matchingSeeds.isEmpty()) {
+					System.out.println(q);
+					results.addAll(findSeedsFor(q));
+					if(results.isEmpty()) {
 						AnalysisSeedWithEnsuredPredicate analysisSeedWithEnsuredPredicate = new AnalysisSeedWithEnsuredPredicate(this, q.asNode(), res.asStatementValWeightTable(q));
 						addSeed(analysisSeedWithEnsuredPredicate);
 					}
 				}
 			}
 		}
+		return results;
 	}
 
 	public Set<IAnalysisSeed> findSeedsFor(ForwardQuery q) {
