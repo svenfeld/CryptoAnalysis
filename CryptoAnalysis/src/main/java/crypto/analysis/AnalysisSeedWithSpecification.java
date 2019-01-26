@@ -1,5 +1,6 @@
 package crypto.analysis;
 
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,6 +77,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	private ExtractParameterAnalysis parameterAnalysis;
 	private boolean secure = true;
 	private boolean internalConstraintSatisfied;
+	private Multimap<IAnalysisSeed, Statement> dependsOnOtherObject = HashMultimap.create();
 	
 
 	public AnalysisSeedWithSpecification(CryptoScanner cryptoScanner, Statement stmt, Val val,
@@ -108,7 +110,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 	@Override
 	public String toString() {
-		return "AnalysisSeed [" + super.toString() + " with spec " + spec.getRule().getClassName() + "]";
+		return "Seed+Rule:"+this.var().value()+"@"+ this.stmt()+" "+ spec.getRule().getClassName(); 
 	}
 
 	public void execute() {
@@ -272,16 +274,21 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 				boolean matched = false;
 				if (baseType instanceof RefType) {
 					RefType refType = (RefType) baseType;
+					/**Required for 
+					 	KeyPair kp = keyGen.generateKeyPair();
+						and 
+						SecretKey generateSecret = secretKeyFactory.generateSecret(pBEKeySpec);
+						and
+						SecretKey key = keygen.generateKey();
+					 */
+					
+					//TODO add logic for depend on this at currStmt. 
+					
 					for (ClassSpecification spec : cryptoScanner.getClassSpecifictions()) {
 						if (spec.getRule().getClassName().equals(refType.getSootClass().getName())) {
 							//This is a weird way;
 							AnalysisSeedWithSpecification seed = cryptoScanner.getOrCreateSeedWithSpec(
 									new AnalysisSeedWithSpecification(cryptoScanner, currStmt, val, spec));
-							//What about the predicate?
-							if(spec.getRule().toString().contains("SecretKey")) {
-//								seed.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
-							}
-							
 							generatedPredicates.put(seed, potentialPredicate, currStmt);
 							matched = true;
 						}
@@ -313,6 +320,11 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 		}
 
+	}
+
+	private void addRequiredPredicateObjectSatifsfiedAtStmt(AnalysisSeedWithSpecification other,
+			Statement currStmt) {
+		dependsOnOtherObject.put(other, currStmt);
 	}
 
 	private boolean predicateParameterEquals(List<ICryptSLPredicateParameter> parameters, String key) {
@@ -361,7 +373,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		}
 		boolean changed = false;
 		System.out.println("=====REQUIRED=====");
-		System.out.println("this" + this);
 		System.out.println("this" + this);
 		Multimap<ForwardQuery, RequiredCryptSLPredicate> removablePredicate = HashMultimap.create();
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {

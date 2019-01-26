@@ -82,7 +82,7 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 
 	@Override
 	public String toString() {
-		return "AnalysisSeedWithEnsuredPredicate:"+this.asNode() +" "; 
+		return "AnalysisSeedWithEnsuredPredicate:"+this.var().value()+"@"+ this.stmt()+" "; 
 	}
 
 	public boolean reaches(Node<Statement, Val> node) {

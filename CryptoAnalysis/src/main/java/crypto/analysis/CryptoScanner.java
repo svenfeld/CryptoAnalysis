@@ -116,13 +116,16 @@ public abstract class CryptoScanner {
 		seedsWithoutSpec.put(value.asNode(), value);
 	}
 	private void checkPredicates() {
+		System.out.println("===== COMBINE FLOWS RELATION ====== ");
 		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
 			seed.getParameterAnalysis().combineDataFlowsForRuleObjects();
 			getAnalysisListener().collectedValues(seed, seed.getParameterAnalysis().getCollectedValues());
 		}
+		System.out.println("===== EVALUTE INTERNAL CONSTRAINTS AND GENERATE REQUIRED PREDICATES ====== ");
 		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
 			seed.evaluateInternalConstraints();
 		}
+		System.out.println("===== FIX POINT FOR ENSURES ====== ");
 		checkMissingRequiredPredicates();
 	}
 
