@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -36,6 +37,7 @@ public abstract class IAnalysisSeed extends WeightedForwardQuery<TransitionFunct
 	protected final Multimap<Statement,RequiredCryptSLPredicate> ensuredPredicatesAtStatement = HashMultimap.create();
 	protected boolean ensuresPredicates = false;
 	protected Table<Statement, Val, ? extends Weight> analysisResults;
+	protected Table<IAnalysisSeed, CryptSLPredicate, Statement> generatedPredicates = HashBasedTable.create();
 	
 	public IAnalysisSeed(CryptoScanner scanner, Statement stmt, Val fact, TransitionFunction func){
 		super(stmt,fact, func);
@@ -74,51 +76,6 @@ public abstract class IAnalysisSeed extends WeightedForwardQuery<TransitionFunct
 	}
 	public void addPotentiallyEnsuredPredicate(CryptSLPredicate potentialPredicate) {
 		potentialPredicates.add(potentialPredicate);
-	}
-	
-	public void addRequiredPredicate(ForwardQuery requiringObjectAllocation,
-			RequiredCryptSLPredicate requiredCryptSLPredicate) {
-		//CallTo, NeverTypeOf etc are not real required predicates
-		if (ConstraintSolver.predefinedPreds.contains(requiredCryptSLPredicate.getPred().getPredName())) {
-			return;
-		}
-		
-		requiredPredicates.put(requiringObjectAllocation, requiredCryptSLPredicate);
-	}
-	
-	public boolean checkPredicates() {
-		if(ensuresPredicates) {
-			return false;
-		}
-		boolean changed = false;
-		Multimap<ForwardQuery, RequiredCryptSLPredicate> removablePredicate = HashMultimap.create();
-		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
-			System.out.println(e.getValue());
-			if(e.getKey() instanceof IAnalysisSeed) {
-				IAnalysisSeed iAnalysisSeed = (IAnalysisSeed) e.getKey();
-				System.out.println(e.getKey());
-				if(!e.getValue().getPred().isNegated() && iAnalysisSeed.hasEnsuredPredicate(e.getValue().getLocation())) {
-					removablePredicate.put(e.getKey(), e.getValue());
-					System.out.println("FOUND PREDICATE " + e.getValue());
-					changed = true;
-				}
-			}
-		}
-		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : removablePredicate.entries()) {
-			this.requiredPredicates.remove(e.getKey(), e.getValue());	
-		}
-		boolean allRequiredPredicatesFullFilled = true;
-		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
-			if(!e.getValue().getPred().isNegated()) {
-				allRequiredPredicatesFullFilled = false;
-			}
-		}
-		ensuresPredicates = allRequiredPredicatesFullFilled;
-		
-		//Does that makes sense?
-		if(ensuresPredicates)
-			addPotentialPredicates();
-		return changed || ensuresPredicates;
 	}
 	
 	public void addPotentialPredicates() {

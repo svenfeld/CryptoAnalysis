@@ -133,9 +133,6 @@ public abstract class CryptoScanner {
 			for(AnalysisSeedWithSpecification seed : this.seedsWithSpec.values()) {
 				hasPredicateRemoved |= seed.checkPredicates();
 			}
-			for(AnalysisSeedWithEnsuredPredicate seed : this.seedsWithoutSpec.values()) {
-				hasPredicateRemoved |= seed.checkPredicates();
-			}
 		}
 	}
 
