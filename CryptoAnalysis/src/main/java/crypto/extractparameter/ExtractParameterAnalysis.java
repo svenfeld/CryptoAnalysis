@@ -1,13 +1,11 @@
 package crypto.extractparameter;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -18,6 +16,8 @@ import boomerang.jimple.AllocVal;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import boomerang.results.BackwardBoomerangResults;
+import crypto.analysis.AnalysisSeedWithEnsuredPredicate;
+import crypto.analysis.AnalysisSeedWithSpecification;
 import crypto.analysis.CryptoScanner;
 import crypto.analysis.IAnalysisSeed;
 import crypto.boomerang.CogniCryptIntAndStringBoomerangOptions;
@@ -25,7 +25,6 @@ import crypto.rules.CryptSLMethod;
 import crypto.typestate.CryptSLMethodToSootMethod;
 import crypto.typestate.LabeledMatcherTransition;
 import crypto.typestate.SootBasedStateMachineGraph;
-import heros.utilities.DefaultValueMap;
 import soot.Local;
 import soot.SootMethod;
 import soot.Type;
@@ -44,12 +43,7 @@ public class ExtractParameterAnalysis {
 	private CryptoScanner cryptoScanner;
 	private Multimap<CallSiteWithParamIndex, ForwardQuery> collectedValues = HashMultimap.create();
 	private Multimap<CallSiteWithParamIndex, Type> propagatedTypes = HashMultimap.create();
-	private DefaultValueMap<AdditionalBoomerangQuery, AdditionalBoomerangQuery> additionalBoomerangQuery = new DefaultValueMap<AdditionalBoomerangQuery, AdditionalBoomerangQuery>() {
-		@Override
-		protected AdditionalBoomerangQuery createItem(AdditionalBoomerangQuery key) {
-			return key;
-		}
-	};
+	private Collection<BackwardQuery> queries = Sets.newHashSet();
 
 	public ExtractParameterAnalysis(CryptoScanner cryptoScanner, Map<Statement, SootMethod> allCallsOnObject,
 			SootBasedStateMachineGraph fsm) {
@@ -81,9 +75,6 @@ public class ExtractParameterAnalysis {
 				}
 				index++;
 			}
-		}
-		for (AdditionalBoomerangQuery q : additionalBoomerangQuery.keySet()) {
-			q.solve();
 		}
 	}
 
@@ -128,7 +119,7 @@ public class ExtractParameterAnalysis {
 							Val queryVal = new Val((Local) parameter, callSite.getMethod());
 							CallSiteWithParamIndex callSiteWithParamIndex = new CallSiteWithParamIndex(callSite, queryVal, index,
 									param.getKey());
-							Set<IAnalysisSeed> reachingSeeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(callSite, queryVal));
+							Set<IAnalysisSeed> reachingSeeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(callSite, queryVal), false);
 							collectedValues.putAll(callSiteWithParamIndex, reachingSeeds);
 							
 							//TODO remove duplicates from the queries below
@@ -159,63 +150,16 @@ public class ExtractParameterAnalysis {
 			throw new RuntimeException("Unreachable");
 		}
 		Val queryVal = new Val((Local) parameter, stmt.getMethod());
-
-		for (Unit pred : cryptoScanner.icfg().getPredsOf(stmt.getUnit().get())) {
-			AdditionalBoomerangQuery query = additionalBoomerangQuery
-					.getOrCreate(new AdditionalBoomerangQuery(new Statement((Stmt) pred, stmt.getMethod()), queryVal));
-			CallSiteWithParamIndex callSiteWithParamIndex = new CallSiteWithParamIndex(stmt, queryVal, index,
-					varNameInSpecification);
-			query.addListener(new QueryListener() {
-				@Override
-				public void solved(AdditionalBoomerangQuery q, BackwardBoomerangResults<NoWeight> res) {
-					propagatedTypes.putAll(callSiteWithParamIndex, res.getPropagationType());
-					collectedValues.putAll(callSiteWithParamIndex, res.getAllocationSites().keySet());
-					System.out.println(res.getAllocationSites());
-				}
-			});
+		Set<IAnalysisSeed> seeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement, Val>(stmt, queryVal), true);
+		CallSiteWithParamIndex callSiteWithParamIndex = new CallSiteWithParamIndex(stmt, queryVal, index,
+				varNameInSpecification);
+		collectedValues.putAll(callSiteWithParamIndex, seeds);
+		
+		//Logic differs from before here
+		for(IAnalysisSeed s : seeds) {
+			propagatedTypes.put(callSiteWithParamIndex, s.getType());
 		}
 	}
 
-	public void addAdditionalBoomerangQuery(AdditionalBoomerangQuery q, QueryListener listener) {
-		AdditionalBoomerangQuery query = additionalBoomerangQuery.getOrCreate(q);
-		query.addListener(listener);
-	}
-
-	public class AdditionalBoomerangQuery extends BackwardQuery {
-		public AdditionalBoomerangQuery(Statement stmt, Val variable) {
-			super(stmt, variable);
-		}
-
-		protected boolean solved;
-		private List<QueryListener> listeners = Lists.newLinkedList();
-		private BackwardBoomerangResults<NoWeight> res;
-
-		public void solve() {
-			Boomerang boomerang = new Boomerang(new CogniCryptIntAndStringBoomerangOptions()) {
-				@Override
-				public BiDiInterproceduralCFG<Unit, SootMethod> icfg() {
-					return ExtractParameterAnalysis.this.cryptoScanner.icfg();
-				}
-			};
-			res = boomerang.solve(this);
-			for (QueryListener l : Lists.newLinkedList(listeners)) {
-				l.solved(this, res);
-			}
-			solved = true;
-		}
-
-		public void addListener(QueryListener q) {
-			if (solved) {
-				q.solved(this, res);
-				return;
-			}
-			listeners.add(q);
-		}
-
-	}
-
-	private static interface QueryListener {
-		public void solved(AdditionalBoomerangQuery q, BackwardBoomerangResults<NoWeight> res);
-	}
 
 }

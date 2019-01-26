@@ -10,11 +10,18 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.inject.internal.util.Sets;
 
+import boomerang.BackwardQuery;
+import boomerang.Boomerang;
+import boomerang.ForwardQuery;
 import boomerang.Query;
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
+import boomerang.results.BackwardBoomerangResults;
 import crypto.Utils;
+import crypto.boomerang.CogniCryptIntAndStringBoomerangOptions;
+import crypto.extractparameter.CallSiteWithParamIndex;
+import crypto.extractparameter.ExtractParameterAnalysis;
 import crypto.predicates.PredicateHandler;
 import crypto.rules.CryptSLRule;
 import crypto.typestate.CryptSLMethodToSootMethod;
@@ -25,11 +32,13 @@ import soot.Scene;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
+import soot.jimple.Stmt;
 import soot.jimple.toolkits.callgraph.ReachableMethods;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
 import soot.util.queue.QueueReader;
 import sync.pds.solver.nodes.Node;
 import typestate.TransitionFunction;
+import wpds.impl.Weight.NoWeight;
 
 public abstract class CryptoScanner {
 
@@ -55,6 +64,7 @@ public abstract class CryptoScanner {
 	};
 	private int solvedObject;
 	private Stopwatch analysisWatch;
+	private Set<Node<Statement,Val>> boomerangQueries  = Sets.newHashSet();
 
 	public abstract BiDiInterproceduralCFG<Unit, SootMethod> icfg();
 
@@ -102,7 +112,9 @@ public abstract class CryptoScanner {
 //		debugger().afterAnalysis();
 	}
 
-
+	public void addSeed(AnalysisSeedWithEnsuredPredicate value) {
+		seedsWithoutSpec.put(value.asNode(), value);
+	}
 	private void checkPredicates() {
 		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
 			seed.getParameterAnalysis().combineDataFlowsForRuleObjects();
@@ -118,7 +130,10 @@ public abstract class CryptoScanner {
 		boolean hasPredicateRemoved = true;
 		while(hasPredicateRemoved) {
 			hasPredicateRemoved = false;
-			for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
+			for(AnalysisSeedWithSpecification seed : this.seedsWithSpec.values()) {
+				hasPredicateRemoved |= seed.checkPredicates();
+			}
+			for(AnalysisSeedWithEnsuredPredicate seed : this.seedsWithoutSpec.values()) {
 				hasPredicateRemoved |= seed.checkPredicates();
 			}
 		}
@@ -214,7 +229,11 @@ public abstract class CryptoScanner {
 		return false;
 	}
 	
-	public Set<IAnalysisSeed> findSeedsForValAtStatement(Node<Statement,Val> node){
+	public Set<IAnalysisSeed> findSeedsForValAtStatement(Node<Statement,Val> node, boolean triggerQuery){
+		if(triggerQuery) {
+			triggerBackwardQuery(node);
+		}
+		
 		Set<IAnalysisSeed> res = Sets.newHashSet();
 		for(AnalysisSeedWithEnsuredPredicate seed : seedsWithoutSpec.values()) {
 			if(seed.reaches(node)) {
@@ -223,6 +242,44 @@ public abstract class CryptoScanner {
 		}
 		for(AnalysisSeedWithSpecification seed : seedsWithSpec.values()) {
 			if(seed.reaches(node)) {
+				res.add(seed);
+			}
+		}
+		return res;
+	}
+
+	private void triggerBackwardQuery(Node<Statement, Val> node) {
+		if(boomerangQueries.add(node)) {
+			for (Unit pred : icfg().getPredsOf(node.stmt().getUnit().get())) {
+				Boomerang boomerang = new Boomerang(new CogniCryptIntAndStringBoomerangOptions()) {
+					@Override
+					public BiDiInterproceduralCFG<Unit, SootMethod> icfg() {
+						return CryptoScanner.this.icfg();
+					}
+				};
+				BackwardQuery bwQ = new BackwardQuery(new Statement((Stmt) pred, node.stmt().getMethod()), node.fact());
+				BackwardBoomerangResults<NoWeight> res = boomerang.solve(bwQ);
+				
+				for(ForwardQuery q : res.getAllocationSites().keySet()) {
+					Set<IAnalysisSeed> matchingSeeds = findSeedsFor(q);
+					if(matchingSeeds.isEmpty()) {
+						AnalysisSeedWithEnsuredPredicate analysisSeedWithEnsuredPredicate = new AnalysisSeedWithEnsuredPredicate(this, q.asNode(), res.asStatementValWeightTable(q));
+						addSeed(analysisSeedWithEnsuredPredicate);
+					}
+				}
+			}
+		}
+	}
+
+	public Set<IAnalysisSeed> findSeedsFor(ForwardQuery q) {
+		Set<IAnalysisSeed> res = Sets.newHashSet();
+		for(AnalysisSeedWithEnsuredPredicate seed : seedsWithoutSpec.values()) {
+			if(seed.asNode().equals(q.asNode())) {
+				res.add(seed);
+			}
+		}
+		for(AnalysisSeedWithSpecification seed : seedsWithSpec.values()) {
+			if(seed.asNode().equals(q.asNode())) {
 				res.add(seed);
 			}
 		}

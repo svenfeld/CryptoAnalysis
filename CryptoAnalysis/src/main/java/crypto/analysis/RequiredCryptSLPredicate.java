@@ -7,10 +7,12 @@ public class RequiredCryptSLPredicate {
 
 	private final CryptSLPredicate predicate;
 	private final Statement stmt;
+	private String predName;
 
 	public RequiredCryptSLPredicate(CryptSLPredicate predicate, Statement stmt) {
 		this.predicate = predicate;
 		this.stmt = stmt;
+		this.predName = predicate.getPredName();
 	}
 
 	@Override
@@ -19,6 +21,7 @@ public class RequiredCryptSLPredicate {
 		int result = 1;
 		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
 		result = prime * result + ((stmt == null) ? 0 : stmt.hashCode());
+		result = prime * result + ((predName == null) ? 0 : predName.hashCode());
 		return result;
 	}
 
@@ -40,6 +43,11 @@ public class RequiredCryptSLPredicate {
 			if (other.stmt != null)
 				return false;
 		} else if (!stmt.equals(other.stmt))
+			return false;
+		if (predName == null) {
+			if (other.predName != null)
+				return false;
+		} else if (!predName.equals(other.predName))
 			return false;
 		return true;
 	}

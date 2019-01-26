@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 
 import boomerang.debugger.Debugger;
@@ -22,38 +23,35 @@ import soot.Unit;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
 import sync.pds.solver.nodes.Node;
 import typestate.TransitionFunction;
+import wpds.impl.Weight;
 
 public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 
-	private ForwardBoomerangResults<TransitionFunction> analysisResults;
-	private Set<CryptSLPredicate> potentialPredicates = Sets.newHashSet();
+	
 	private ExtendedIDEALAnaylsis problem;
 
 	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate) {
 		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
-		this.ensuresPredicates = true;
 	}
 
+	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate, Table<Statement, Val, ? extends Weight> results) {
+		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
+		this.analysisResults = results;
+	}
+	
 	@Override
 	public void execute() {
 		cryptoScanner.getAnalysisListener().seedStarted(this);
 		ExtendedIDEALAnaylsis solver = getOrCreateAnalysis();
 		solver.run(this);
-		analysisResults = solver.getResults();
+		analysisResults = solver.getResults().asStatementValWeightTable();
 
 		if(analysisResults == null)
 			return;
 
-		for(Cell<Statement, Val, TransitionFunction> c : analysisResults.asStatementValWeightTable().cellSet()){
-			for(CryptSLPredicate p : potentialPredicates) {
-				ensuredPredicates.add(new RequiredCryptSLPredicate(p, c.getRowKey()));
-				ensuredPredicatesAtStatement.put(c.getRowKey(), new RequiredCryptSLPredicate(p, c.getRowKey()));
-			}
-		}
-
-		cryptoScanner.getAnalysisListener().onSeedFinished(this, analysisResults);
+		addPotentialPredicates();
+		
 	}
-
 
 	private ExtendedIDEALAnaylsis getOrCreateAnalysis() {
 		problem = new ExtendedIDEALAnaylsis() {
@@ -91,16 +89,12 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 		return problem;
 	}
 
-	public void addPotentiallyEnsuredPredicate(CryptSLPredicate potentialPredicate) {
-		potentialPredicates.add(potentialPredicate);
-	}
-
 	@Override
 	public String toString() {
 		return "AnalysisSeedWithEnsuredPredicate:"+this.asNode() +" " + ensuredPredicates; 
 	}
 
 	public boolean reaches(Node<Statement, Val> node) {
-		return analysisResults != null && analysisResults.asStatementValWeightTable().row(node.stmt()).containsKey(node.fact());
+		return analysisResults != null && analysisResults.row(node.stmt()).containsKey(node.fact());
 	}
 }

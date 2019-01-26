@@ -286,7 +286,7 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 
 		Assertions.hasEnsuredPredicate(key);
 		Assertions.mustBeInAcceptingState(keygen);
-
+//
 		SecureRandom sr = SecureRandom.getInstanceStrong();
 		Assertions.hasEnsuredPredicate(sr);
 
@@ -297,11 +297,11 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		IvParameterSpec iv = new IvParameterSpec(ivbytes);
 		Assertions.mustBeInAcceptingState(iv);
 		Assertions.hasEnsuredPredicate(iv);
-
+//
 		Cipher cCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		Assertions.extValue(0);
 		cCipher.init(Cipher.ENCRYPT_MODE, key, iv);
-
+//
 		Assertions.extValue(0);
 		byte[] encText = cCipher.doFinal("".getBytes());
 		Assertions.hasEnsuredPredicate(encText);

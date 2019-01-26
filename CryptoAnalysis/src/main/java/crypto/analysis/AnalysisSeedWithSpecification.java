@@ -75,8 +75,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	protected Map<Statement, SootMethod> allCallsOnObject = Maps.newHashMap();
 	private ExtractParameterAnalysis parameterAnalysis;
 	private boolean secure = true;
-	private Multimap<ForwardQuery,RequiredCryptSLPredicate> requiredPredicates = HashMultimap.create();
-	private Set<CryptSLPredicate> potentialPredicates = Sets.newHashSet();
 	private boolean internalConstraintSatisfied;
 	
 
@@ -121,9 +119,9 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			return;
 
 		allCallsOnObject = results.getInvokedMethodOnInstance();
+		runExtractParameterAnalysis();
 		computeTypestateErrorUnits();
 		computeTypestateErrorsForEndOfObjectLifeTime();
-		runExtractParameterAnalysis();
 		
 		cryptoScanner.getAnalysisListener().onSeedFinished(this, results);
 	}
@@ -131,7 +129,8 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 
 	//Is this only necessary for SecretKey key = keygen.generateKey(); because no rules say we got to start here. In which state to start?
-	private void addDirectlyEnsuredPredicate() {
+	@Override
+	public void addPotentialPredicates() {
 		for(Cell<Statement, Val, TransitionFunction> c : results.asStatementValWeightTable().cellSet()){
 			for(CryptSLPredicate p : potentialPredicates) {
 				ensuredPredicates.add(new RequiredCryptSLPredicate(p, c.getRowKey()));
@@ -211,7 +210,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 	private void onAddedTypestateChange(Statement curr, State stateNode) {
 		for (CryptSLPredicate potentialPredicate : spec.getRule().getPredicates()) {
-			System.out.println(" " + potentialPredicate);
 			if (potentialPredicate.isNegated()) {
 				continue;
 			}
@@ -227,11 +225,11 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 	private void triggerNewDataFlowForPotenialPredicate(Statement currStmt, State stateNode, CryptSLPredicate potentialPredicate) {
 //		//This logic is wrong here.
-//		for (ICryptSLPredicateParameter predicateParam : potentialPredicate.getParameters()) {
+		for (ICryptSLPredicateParameter predicateParam : potentialPredicate.getParameters()) {
 //			if (predicateParam.getName().equals("this")) {
-//				expectPredicateWhenThisObjectIsInState(stateNode, currStmt, potentialPredicate);
+				expectPredicateWhenThisObjectIsInState(stateNode, currStmt, potentialPredicate);
 //			}
-//		}
+		}
 		InvokeExpr ie = ((Stmt) currStmt.getUnit().get()).getInvokeExpr();
 		SootMethod invokedMethod = ie.getMethod();
 		Collection<CryptSLMethod> convert = CryptSLMethodToSootMethod.v().convert(invokedMethod);
@@ -244,35 +242,50 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 				Value leftOp = as.getLeftOp();
 				AllocVal val = new AllocVal(leftOp, currStmt.getMethod(), as.getRightOp(), new Statement(as, currStmt.getMethod()));
 				
+				//Do we need somthing along the lines?
+//				Set<IAnalysisSeed> seeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(currStmt,val), false);
+//				if(seeds.isEmpty())
+				
+				Type baseType = val.value().getType();
 				boolean matched = false;
-				for (ClassSpecification spec : cryptoScanner.getClassSpecifictions()) {
-					Type baseType = val.value().getType();
-					if (baseType instanceof RefType) {
-						RefType refType = (RefType) baseType;
+				if (baseType instanceof RefType) {
+					RefType refType = (RefType) baseType;
+					for (ClassSpecification spec : cryptoScanner.getClassSpecifictions()) {
 						if (spec.getRule().getClassName().equals(refType.getSootClass().getName())) {
 							//This is a weird way;
 							AnalysisSeedWithSpecification seed = cryptoScanner.getOrCreateSeedWithSpec(
 									new AnalysisSeedWithSpecification(cryptoScanner, currStmt, val, spec));
 							//What about the predicate?
-								if(spec.getRule().toString().contains("SecretKey")) {
-									seed.addPotentiallyEnsuredPredicate(potentialPredicate);
-								}
-								matched = true;
+							if(spec.getRule().toString().contains("SecretKey")) {
+								seed.addPotentiallyEnsuredPredicate(potentialPredicate);
 							}
+							seed.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
 						}
+						matched = true;
+					}
 				}
 				if(!matched) {
-					createNewSeed(currStmt, val, potentialPredicate);
+					AnalysisSeedWithEnsuredPredicate seed = cryptoScanner
+							.getOrCreateSeed(new Node<Statement, Val>(currStmt, val));
+					System.out.println(seed);
+					seed.addPotentiallyEnsuredPredicate(potentialPredicate);
+					seed.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
 				}
-				
 			}
+				
 			int i = 0;
 			for (Entry<String, String> p : cryptSLMethod.getParameters()) {
 				if (predicateParameterEquals(potentialPredicate.getParameters(), p.getKey())) {
 					Value param = ie.getArg(i);
 					if (param instanceof Local) {
 						Val val = new Val(param, currStmt.getMethod());
-						createNewSeed(currStmt, val, potentialPredicate);
+						//Potential for being unsound: The function findSeedsForValAtStatement requires the analysis of other seed to be done... 
+						// Would need another fix-point iteration
+						Set<IAnalysisSeed> seeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(currStmt,val), true);
+						for(IAnalysisSeed s : seeds) {
+							s.addPotentiallyEnsuredPredicate(potentialPredicate);
+							s.addRequiredPredicate(this, new RequiredCryptSLPredicate(potentialPredicate, currStmt));
+						}
 					}
 				}
 				i++;
@@ -291,18 +304,8 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		return false;
 	}
 
-	private void createNewSeed(Statement currStmt, Val val, CryptSLPredicate potentialPredicate) {
-		if (val == null) {
-			return;
-		}
-		AnalysisSeedWithEnsuredPredicate seed = cryptoScanner
-				.getOrCreateSeed(new Node<Statement, Val>(currStmt, val));
-		seed.addPotentiallyEnsuredPredicate(potentialPredicate);
-	}
 
-	private void addPotentiallyEnsuredPredicate(CryptSLPredicate potentialPredicate) {
-		potentialPredicates.add(potentialPredicate);
-	}
+	
 
 	private void expectPredicateWhenThisObjectIsInState(State stateNode, Statement currStmt,
 			CryptSLPredicate potentialPredicate) {
@@ -334,33 +337,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		if(!internalConstraintSatisfied) {
 			return false;
 		}
-		if(ensuresPredicates) {
-			return false;
-		}
-		boolean changed = false;
-		Multimap<ForwardQuery, RequiredCryptSLPredicate> removablePredicate = HashMultimap.create();
-		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
-			if(e.getKey() instanceof IAnalysisSeed) {
-				IAnalysisSeed iAnalysisSeed = (IAnalysisSeed) e.getKey();
-				if(!e.getValue().getPred().isNegated() && iAnalysisSeed.hasEnsuredPredicate(e.getValue())) {
-					removablePredicate.put(e.getKey(), e.getValue());
-					changed = true;
-				}
-			}
-		}
-		
-		this.requiredPredicates.removeAll(removablePredicate);
-		
-		boolean allRequiredPredicatesFullFilled = true;
-		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
-			if(!e.getValue().getPred().isNegated()) {
-				allRequiredPredicatesFullFilled = false;
-			}
-		}
-		ensuresPredicates = allRequiredPredicatesFullFilled;
-
-		addDirectlyEnsuredPredicate();
-		return changed;
+		return super.checkPredicates();
 	}
 
 //	private boolean doPredsMatch(CryptSLPredicate pred, EnsuredCryptSLPredicate ensPred) {
@@ -534,16 +511,11 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	public void evaluateInternalConstraints() {
 		constraintSolver = new ConstraintSolver(this, cryptoScanner.getAnalysisListener());
 		internalConstraintSatisfied = (constraintSolver.evaluateRelConstraints() == 0);
-		System.out.println(internalConstraintSatisfied);
 	}
 
+	@Override
 	public void addRequiredPredicate(ForwardQuery requiringObjectAllocation,
 			RequiredCryptSLPredicate requiredCryptSLPredicate) {
-		//CallTo, NeverTypeOf etc are not real required predicates
-		if (ConstraintSolver.predefinedPreds.contains(requiredCryptSLPredicate.getPred().getPredName())) {
-			return;
-		}
-		
 		//Remove conditional Predicates straight away.
 		final ISLConstraint conditional = requiredCryptSLPredicate.getPred().getConstraint();
 		if (conditional != null) {
@@ -553,11 +525,10 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 				return;
 			}
 		}
-		requiredPredicates.put(requiringObjectAllocation, requiredCryptSLPredicate);
+		super.addRequiredPredicate(requiringObjectAllocation, requiredCryptSLPredicate);
 	}
-	
 	@Override
-	public boolean hasEnsuredPredicate(RequiredCryptSLPredicate value) {
+	public boolean hasEnsuredPredicate(Statement value) {
 		return internalConstraintSatisfied && super.hasEnsuredPredicate(value);
 	}
 
