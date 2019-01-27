@@ -99,14 +99,17 @@ public class ConstraintSolver {
 				if (cons instanceof CryptSLPredicate) {
 					CryptSLPredicate pred = (CryptSLPredicate) cons;
 					for (Entry<CallSiteWithParamIndex, ForwardQuery> e : seed.getParameterAnalysis().getCollectedValues().entries()) {
-						//TODO why is there a "0", what about the remaining parameters?
 						CallSiteWithParamIndex cwpi = e.getKey();
-						if (cwpi.getVarName().equals(pred.getParameters().get(0).getName())) {
-							relConstraints.add(pred);
-							System.out.println("Adding predicate " + pred);
-							System.out.println("to predicate " + seed);
-							seed.addRequiredPredicate(e.getValue(), new RequiredCryptSLPredicate(pred, cwpi.stmt()));
+						for(ICryptSLPredicateParameter param : pred.getParameters()) {
+							if (cwpi.getVarName().equals(param.getName())) {
+								//FIX Cipher rule
+								if(param.getName().equals("transformation"))
+									continue;
+								relConstraints.add(pred);
+								seed.addRequiredPredicate(e.getValue(), new RequiredCryptSLPredicate(pred, cwpi.stmt()));
+							}
 						}
+						
 					}
 				} else {
 					relConstraints.add(cons);

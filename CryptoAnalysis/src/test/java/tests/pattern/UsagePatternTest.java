@@ -1054,4 +1054,22 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		KeyPair keyPair = generator.generateKeyPair();
 		Assertions.hasEnsuredPredicate(keyPair);
 	}
+	
+	@Test
+	public void randomizedTest() throws NoSuchAlgorithmException {
+	    byte[] seed = { 1, 2, 3 };
+	    
+	    new SecureRandom(seed); // No error 
+	    
+	    SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+	    random.setSeed(seed); // No error
+	    Assertions.notHasEnsuredPredicate(random);
+	    
+	    KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+	    keyGen.init(256, random); // "Second parameter was not properly randomized"
+	    keyGen.generateKey();
+	    
+	    IvParameterSpec iv = new IvParameterSpec(seed); // "First parameter was not properly randomized"
+	    Assertions.notHasEnsuredPredicate(iv);
+	}
 }
