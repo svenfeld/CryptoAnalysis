@@ -66,6 +66,9 @@ public class KeyPatternTest extends UsagePatternTestingFramework {
 		SecretKey key = keygen.generateKey();
 		Assertions.hasEnsuredPredicate(key);
 		Assertions.mustBeInAcceptingState(keygen);
+
+		 byte[] keyMaterial = key.getEncoded();
+		 Assertions.hasEnsuredPredicate(keyMaterial);
 		
 	}
 	@Test
@@ -77,6 +80,8 @@ public class KeyPatternTest extends UsagePatternTestingFramework {
 		SecretKey key = keygen.generateKey();
 		Assertions.notHasEnsuredPredicate(key);
 		Assertions.mustBeInAcceptingState(keygen);
+		byte[] keyMaterial = key.getEncoded();
+		Assertions.notHasEnsuredPredicate(keyMaterial);
 	}
 	
 
