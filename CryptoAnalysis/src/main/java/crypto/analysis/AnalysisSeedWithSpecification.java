@@ -77,7 +77,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	private ExtractParameterAnalysis parameterAnalysis;
 	private boolean secure = true;
 	private boolean internalConstraintSatisfied;
-	private Multimap<IAnalysisSeed, Statement> dependsOnOtherObject = HashMultimap.create();
+	private Set<IAnalysisSeed> dependsOnOtherObject = Sets.newHashSet();
 	
 
 	public AnalysisSeedWithSpecification(CryptoScanner cryptoScanner, Statement stmt, Val val,
@@ -289,6 +289,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 							//This is a weird way;
 							AnalysisSeedWithSpecification seed = cryptoScanner.getOrCreateSeedWithSpec(
 									new AnalysisSeedWithSpecification(cryptoScanner, currStmt, val, spec));
+							seed.addDependsOn(this, currStmt);
 							generatedPredicates.put(seed, potentialPredicate, currStmt);
 							matched = true;
 						}
@@ -322,9 +323,9 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 	}
 
-	private void addRequiredPredicateObjectSatifsfiedAtStmt(AnalysisSeedWithSpecification other,
-			Statement currStmt) {
-		dependsOnOtherObject.put(other, currStmt);
+	private void addDependsOn(AnalysisSeedWithSpecification analysisSeedWithSpecification, Statement currStmt) {
+		//Ignoring statement..
+		dependsOnOtherObject.add(analysisSeedWithSpecification);
 	}
 
 	private boolean predicateParameterEquals(List<ICryptSLPredicateParameter> parameters, String key) {
@@ -386,28 +387,37 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			if(e.getKey() instanceof IAnalysisSeed) {
 				IAnalysisSeed iAnalysisSeed = (IAnalysisSeed) e.getKey();
 				if(!e.getValue().getPred().isNegated() && iAnalysisSeed.hasEnsuredPredicate(e.getValue())) {
-					System.out.println("iAnalysiSeed has pred");
-					System.out.println(iAnalysisSeed);
-					System.out.println(e.getValue());
-					System.out.println("and is removed from");
-					System.out.println(this);
 					removablePredicate.put(e.getKey(), e.getValue());
 					changed = true;
 				}
 			}
 		}
 
-		System.out.println("==============");
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : removablePredicate.entries()) {
 			this.requiredPredicates.remove(e.getKey(), e.getValue());	
 		}
+		
+		//Checking implicit dependencies.
+		Set<AnalysisSeedWithSpecification> removableDependsOn = Sets.newHashSet();
+		for(IAnalysisSeed e : this.dependsOnOtherObject) {
+			if(e instanceof AnalysisSeedWithSpecification) {
+				AnalysisSeedWithSpecification iAnalysisSeed = (AnalysisSeedWithSpecification) e;
+				if(iAnalysisSeed.isSatisfied()) {
+					removableDependsOn.add(iAnalysisSeed);
+					changed = true;
+				}
+			}
+		}
+
+		this.dependsOnOtherObject.removeAll(removableDependsOn);	
+		
 		boolean allRequiredPredicatesFullFilled = true;
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
 			if(!e.getValue().getPred().isNegated()) {
 				allRequiredPredicatesFullFilled = false;
 			}
 		}
-		ensuresPredicates = allRequiredPredicatesFullFilled;
+		ensuresPredicates = allRequiredPredicatesFullFilled && dependsOnOtherObject.isEmpty();
 		//Does that makes sense?
 		if(ensuresPredicates)
 			addPredicatesOnOtherObjects();
@@ -458,6 +468,10 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 //		}
 //		return pred.isNegated() != requiredPredicatesExist;
 //	}
+
+	private boolean isSatisfied() {
+		return internalConstraintSatisfied && ensuresPredicates;
+	}
 
 	private Collection<String> retrieveValueFromUnit(CallSiteWithParamIndex cswpi, Collection<ForwardQuery> collection) {
 		Collection<String> values = new ArrayList<String>();

@@ -139,30 +139,6 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		encrypt(tmpKey);
 	}
 
-	@Test
-	public void UsagePatternTestInter4() throws GeneralSecurityException {
-		SecretKey key = generateKey();
-		Assertions.hasEnsuredPredicate(key);
-		wrongRebuild(key);
-	}
-
-	private void wrongRebuild(SecretKey key) throws GeneralSecurityException {
-		SecretKey tmpKey = new SecretKeySpec(key.getEncoded(), "DES");
-		Assertions.hasEnsuredPredicate(tmpKey);
-		encryptWrong(tmpKey);
-	}
-
-	private void encryptWrong(SecretKey key) throws GeneralSecurityException {
-		Cipher cCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-		Assertions.extValue(0);
-		cCipher.init(Cipher.ENCRYPT_MODE, key);
-
-		Assertions.extValue(0);
-		byte[] encText = cCipher.doFinal("".getBytes());
-		Assertions.notHasEnsuredPredicate(encText);
-		Assertions.mustBeInAcceptingState(cCipher);
-		cCipher.getIV();
-	}
 
 	private void encrypt(SecretKey key) throws GeneralSecurityException {
 		Cipher cCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");

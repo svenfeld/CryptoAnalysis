@@ -49,6 +49,7 @@ import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.Constant;
 import soot.jimple.IntConstant;
+import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
 
@@ -102,7 +103,7 @@ public class ConstraintSolver {
 						CallSiteWithParamIndex cwpi = e.getKey();
 						for(ICryptSLPredicateParameter param : pred.getParameters()) {
 							if (cwpi.getVarName().equals(param.getName())) {
-								//FIX Cipher rule
+								//TODO: FIX Cipher rule
 								if(param.getName().equals("transformation"))
 									continue;
 								relConstraints.add(pred);
