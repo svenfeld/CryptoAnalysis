@@ -2,6 +2,7 @@ package tests.pattern;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
@@ -1024,8 +1025,20 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 	public void positiveRsaParameterSpecTest() throws GeneralSecurityException, IOException {
 		Integer keySize = new Integer(2048);
 		KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+		RSAKeyGenParameterSpec parameters = new RSAKeyGenParameterSpec(keySize, BigInteger.valueOf(65537));
+		Assertions.extValue(0);
+		generator.initialize(parameters, new SecureRandom());
+		KeyPair keyPair = generator.generateKeyPair();
+		Assertions.hasEnsuredPredicate(keyPair);
+	}
+	
+	@Test
+	public void positiveRsaParameterSpecTest2() throws GeneralSecurityException, IOException {
+		Integer keySize = new Integer(2048);
+		KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
 		RSAKeyGenParameterSpec parameters = new RSAKeyGenParameterSpec(keySize, RSAKeyGenParameterSpec.F4);
 		Assertions.extValue(0);
+		Assertions.extValue(1);
 		generator.initialize(parameters, new SecureRandom());
 		KeyPair keyPair = generator.generateKeyPair();
 		Assertions.hasEnsuredPredicate(keyPair);
