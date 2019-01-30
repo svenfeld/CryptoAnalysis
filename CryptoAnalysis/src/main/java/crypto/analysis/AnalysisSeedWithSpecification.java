@@ -345,7 +345,8 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		if (results == null)
 			return;
 		System.out.println("GENERATING STATE " + state);
-		for(Statement s : getStatementsWithState(state)) {
+		for(Statement s : getStatementsWithState(state)){
+			System.out.println(s+  "   " + potentialPredicate);
 			ensuredPredicatesAtStatement.put(s, new RequiredCryptSLPredicate(potentialPredicate, s));
 		}
 //		for (Cell<Statement, Val, TransitionFunction> e : results.asStatementValWeightTable().cellSet()) {
@@ -379,6 +380,12 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			return false;
 		}
 		boolean changed = false;
+		System.out.println("=====ENSURES=====");
+		System.out.println("this" + this);
+		for(Entry<Statement, RequiredCryptSLPredicate> e : ensuredPredicatesAtStatement.entries()) {
+			System.out.println(e);
+		}
+		
 		System.out.println("=====REQUIRED=====");
 		System.out.println("this" + this);
 		Multimap<ForwardQuery, RequiredCryptSLPredicate> removablePredicate = HashMultimap.create();
@@ -600,6 +607,10 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	public void evaluateInternalConstraints() {
 		constraintSolver = new ConstraintSolver(this, cryptoScanner.getAnalysisListener());
 		internalConstraintSatisfied = (constraintSolver.evaluateRelConstraints() == 0);
+		if(!internalConstraintSatisfied) {
+			System.out.println(" Does not satisfy internal constraints");
+			System.out.println(this);
+		}
 	}
 
 	public void addRequiredPredicate(ForwardQuery requiringObjectAllocation,

@@ -29,6 +29,13 @@ public class CogniCryptIntAndStringBoomerangOptions extends IntAndStringBoomeran
         if (stmt.containsInvokeExpr() && stmt instanceof AssignStmt) {
             AssignStmt as = (AssignStmt) stmt;
             if (as.getLeftOp().equals(fact.value())) {
+                SootMethod method = as.getInvokeExpr().getMethod();
+                String sig = method.getSignature();
+                if (sig.equals("<java.math.BigInteger: java.math.BigInteger valueOf(long)>")){
+                     Value arg = as.getInvokeExpr().getArg(0);
+        				return Optional.of(new AllocVal(as.getLeftOp(),m,arg, new Statement(stmt,m)));
+                }            
+
                 if (icfg.getCalleesOfCallAt(stmt).isEmpty())
                     return Optional.of(new AllocVal(as.getLeftOp(), m, as.getRightOp(),new Statement(as, m)));
             }

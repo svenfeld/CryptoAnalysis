@@ -88,7 +88,7 @@ public abstract class CryptoScanner {
 		listener.beforeAnalysis();
 		analysisWatch = Stopwatch.createStarted();
 		System.out.println("Searching fo Seeds for analysis!");
-		initialize();
+		computeSeeds();
 		long elapsed = analysisWatch.elapsed(TimeUnit.SECONDS);
 		System.out.println("Discovered " + worklist.size() + " analysis seeds within " + elapsed + " seconds!");
 		while (!worklist.isEmpty()) {
@@ -156,7 +156,7 @@ public abstract class CryptoScanner {
 		}
 	}
 
-	private void initialize() {
+	private void computeSeeds() {
 		ReachableMethods rm = Scene.v().getReachableMethods();
 		QueueReader<MethodOrMethodContext> listener = rm.listener();
 		while (listener.hasNext()) {
@@ -168,6 +168,7 @@ public abstract class CryptoScanner {
 			for (ClassSpecification spec : getClassSpecifictions()) {
 				spec.invokesForbiddenMethod(method);
 				if (spec.getRule().getClassName().equals("javax.crypto.SecretKey")) {
+					//Special handling for the weird rule Secret Key
 					continue;
 				}
 				for (Query seed : spec.getInitialSeeds(method)) {
@@ -261,6 +262,7 @@ public abstract class CryptoScanner {
 				BackwardBoomerangResults<NoWeight> res = boomerang.solve(bwQ);
 				for(ForwardQuery q : res.getAllocationSites().keySet()) {
 					results.addAll(findSeedsFor(q));
+					System.out.println(q);
 					if(results.isEmpty()) {
 						AnalysisSeedWithEnsuredPredicate analysisSeedWithEnsuredPredicate = new AnalysisSeedWithEnsuredPredicate(this, q.asNode(), res.asStatementValWeightTable(q));
 						addSeed(analysisSeedWithEnsuredPredicate);

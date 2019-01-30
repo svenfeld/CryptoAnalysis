@@ -15,6 +15,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import boomerang.ForwardQuery;
+import boomerang.jimple.AllocVal;
 import boomerang.jimple.Statement;
 import crypto.analysis.AnalysisSeedWithSpecification;
 import crypto.analysis.ClassSpecification;
@@ -49,6 +50,7 @@ import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.Constant;
 import soot.jimple.IntConstant;
+import soot.jimple.LongConstant;
 import soot.jimple.NullConstant;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
@@ -83,6 +85,9 @@ public class ConstraintSolver {
 			return ((StringConstant) val).value;
 		} else if (val instanceof IntConstant || val.getType() instanceof IntType) {
 			return val.toString();
+		} else if (val instanceof LongConstant){
+			//Long values end in 65554L.
+			return val.toString().replaceAll("L", "");
 		} else {
 			return "";
 		}
@@ -529,9 +534,16 @@ public class ConstraintSolver {
 					final Stmt allocSite = wrappedAllocSite.stmt().getUnit().get();
 
 					if (wrappedCallSite.getVarName().equals(varName)) {
-						if (callSite.equals(allocSite)) {
-							varVal.add(retrieveConstantFromValue(callSite.getInvokeExpr().getArg(wrappedCallSite.getIndex())));
+						if(wrappedAllocSite.var() instanceof AllocVal) {
+							AllocVal allocVal = (AllocVal) wrappedAllocSite.var();
+							varVal.add(retrieveConstantFromValue(allocVal.allocationValue()));
 							witness = new CallSiteWithExtractedValue(wrappedCallSite, ExtractedValue.fromQuery(wrappedAllocSite));
+						
+						}
+						if (callSite.equals(allocSite)) {
+							throw new RuntimeException("");
+//							varVal.add(retrieveConstantFromValue(callSite.getInvokeExpr().getArg(wrappedCallSite.getIndex())));
+//							witness = new CallSiteWithExtractedValue(wrappedCallSite, ExtractedValue.fromQuery(wrappedAllocSite));
 						} else if (allocSite instanceof AssignStmt) {
 							final Value rightSide = ((AssignStmt) allocSite).getRightOp();
 							if (rightSide instanceof Constant) {
