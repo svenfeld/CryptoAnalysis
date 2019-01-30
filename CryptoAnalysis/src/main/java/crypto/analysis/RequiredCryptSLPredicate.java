@@ -13,14 +13,12 @@ public class RequiredCryptSLPredicate {
 		this.predicate = predicate;
 		this.stmt = stmt;
 		this.predName = predicate.getPredName();
-		System.out.println(predName);
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-//		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
 		result = prime * result + ((stmt == null) ? 0 : stmt.hashCode());
 		result = prime * result + ((predName == null) ? 0 : predName.hashCode());
 		return result;
@@ -35,11 +33,6 @@ public class RequiredCryptSLPredicate {
 		if (getClass() != obj.getClass())
 			return false;
 		RequiredCryptSLPredicate other = (RequiredCryptSLPredicate) obj;
-//		if (predicate == null) {
-//			if (other.predicate != null)
-//				return false;
-//		} else if (!predicate.equals(other.predicate))
-//			return false;
 		if (stmt == null) {
 			if (other.stmt != null)
 				return false;
@@ -63,7 +56,6 @@ public class RequiredCryptSLPredicate {
 
 	@Override
 	public String toString() {
-		// TODO Auto-generated method stub
-		return "misses " + predicate + " @ " + stmt.toString();
+		return  predicate + " @ " + stmt.toString();
 	}
 }

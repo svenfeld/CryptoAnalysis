@@ -8,7 +8,6 @@ import boomerang.jimple.Val;
 import boomerang.results.ForwardBoomerangResults;
 import crypto.analysis.errors.AbstractError;
 import crypto.extractparameter.CallSiteWithParamIndex;
-import crypto.extractparameter.ExtractedValue;
 import sync.pds.solver.nodes.Node;
 import typestate.TransitionFunction;
 

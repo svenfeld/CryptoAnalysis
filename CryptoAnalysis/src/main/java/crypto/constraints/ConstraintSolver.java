@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -80,19 +81,6 @@ public class ConstraintSolver {
 		this.reporter = crySLResultsReporter;
 	}
 
-	private static String retrieveConstantFromValue(Value val) {
-		if (val instanceof StringConstant) {
-			return ((StringConstant) val).value;
-		} else if (val instanceof IntConstant || val.getType() instanceof IntType) {
-			return val.toString();
-		} else if (val instanceof LongConstant){
-			//Long values end in 65554L.
-			return val.toString().replaceAll("L", "");
-		} else {
-			return "";
-		}
-	}
-
 	public int evaluateRelConstraints() {
 		for (ISLConstraint cons : allConstraints) {
 
@@ -104,32 +92,35 @@ public class ConstraintSolver {
 			if (involvedVarNames.isEmpty()) {
 				if (cons instanceof CryptSLPredicate) {
 					CryptSLPredicate pred = (CryptSLPredicate) cons;
-					for (Entry<CallSiteWithParamIndex, ForwardQuery> e : seed.getParameterAnalysis().getCollectedValues().entries()) {
+					for (Entry<CallSiteWithParamIndex, ForwardQuery> e : seed.getParameterAnalysis()
+							.getCollectedValues().entries()) {
 						CallSiteWithParamIndex cwpi = e.getKey();
-						for(ICryptSLPredicateParameter param : pred.getParameters()) {
+						for (ICryptSLPredicateParameter param : pred.getParameters()) {
 							if (cwpi.getVarName().equals(param.getName())) {
-								//TODO: FIX Cipher rule
-								if(param.getName().equals("transformation"))
+								// TODO: FIX Cipher rule
+								if (param.getName().equals("transformation"))
 									continue;
 								relConstraints.add(pred);
-								seed.addRequiredPredicate(e.getValue(), new RequiredCryptSLPredicate(pred, cwpi.stmt()));
+								seed.addRequiredPredicate(e.getValue(),
+										new RequiredCryptSLPredicate(pred, cwpi.stmt()));
 							}
 						}
-						
+
 					}
 				} else {
 					relConstraints.add(cons);
 				}
 			}
 		}
-		
+
 		int fail = 0;
 		for (ISLConstraint con : relConstraints) {
 			EvaluableConstraint currentConstraint = createConstraint(con);
 			currentConstraint.evaluate();
 			for (AbstractError e : currentConstraint.getErrors()) {
 				if (e instanceof ImpreciseValueExtractionError) {
-					reporter.reportError(seed, new ImpreciseValueExtractionError(con, e.getErrorLocation(), e.getRule()));
+					reporter.reportError(seed,
+							new ImpreciseValueExtractionError(con, e.getErrorLocation(), e.getRule()));
 					break;
 				} else {
 					fail++;
@@ -236,76 +227,79 @@ public class ConstraintSolver {
 
 			List<ICryptSLPredicateParameter> parameters = pred.getParameters();
 			switch (pred.getPredName()) {
-				case "callTo":
-					List<ICryptSLPredicateParameter> predMethods = parameters;
-					for (ICryptSLPredicateParameter predMethod : predMethods) {
-						//check whether predMethod is in foundMethods, which type-state analysis has to figure out
-						CryptSLMethod reqMethod = (CryptSLMethod) predMethod;
-						for (Statement unit : collectedCalls) {
-							if (!(unit.isCallsite()))
-								continue;
-							SootMethod foundCall = ((Stmt) unit.getUnit().get()).getInvokeExpr().getMethod();
-							Collection<SootMethod> convert = CryptSLMethodToSootMethod.v().convert(reqMethod);
-							if (convert.contains(foundCall)) {
+			case "callTo":
+				List<ICryptSLPredicateParameter> predMethods = parameters;
+				for (ICryptSLPredicateParameter predMethod : predMethods) {
+					// check whether predMethod is in foundMethods, which type-state analysis has to
+					// figure out
+					CryptSLMethod reqMethod = (CryptSLMethod) predMethod;
+					for (Statement unit : collectedCalls) {
+						if (!(unit.isCallsite()))
+							continue;
+						SootMethod foundCall = ((Stmt) unit.getUnit().get()).getInvokeExpr().getMethod();
+						Collection<SootMethod> convert = CryptSLMethodToSootMethod.v().convert(reqMethod);
+						if (convert.contains(foundCall)) {
+							return;
+						}
+					}
+				}
+				// TODO: Need seed here.
+				return;
+			case "noCallTo":
+				if (collectedCalls.isEmpty()) {
+					return;
+				}
+				List<ICryptSLPredicateParameter> predForbiddenMethods = parameters;
+				for (ICryptSLPredicateParameter predForbMethod : predForbiddenMethods) {
+					// check whether predForbMethod is in foundForbMethods, which forbidden-methods
+					// analysis has to figure out
+					CryptSLMethod reqMethod = ((CryptSLMethod) predForbMethod);
+
+					for (Statement call : collectedCalls) {
+						if (!call.isCallsite())
+							continue;
+						SootMethod foundCall = call.getUnit().get().getInvokeExpr().getMethod();
+						Collection<SootMethod> convert = CryptSLMethodToSootMethod.v().convert(reqMethod);
+						if (convert.contains(foundCall)) {
+							errors.add(new ForbiddenMethodError(call, classSpec.getRule(), foundCall, convert));
+							return;
+						}
+					}
+				}
+				return;
+			case "neverTypeOf":
+				// pred looks as follows: neverTypeOf($varName, $type)
+				// -> first parameter is always the variable
+				// -> second parameter is always the type
+				String varName = ((CryptSLObject) parameters.get(0)).getVarName();
+				for (CallSiteWithParamIndex cs : parameterAnalysisQuerySites) {
+					if (cs.getVarName().equals(varName)) {
+						Collection<Type> vals = propagatedTypes.get(cs);
+						for (Type t : vals) {
+							if (t.toQuotedString().equals(parameters.get(1).getName())) {
+								// TODO: Fix NeverTypeOfErrors also report a ConstraintError
+								errors.add(new NeverTypeOfError(new CallSiteWithExtractedValue(cs, null),
+										classSpec.getRule(), seed, pred));
 								return;
 							}
 						}
 					}
-					//TODO: Need seed here.
-					return;
-				case "noCallTo":
-					if (collectedCalls.isEmpty()) {
-						return;
-					}
-					List<ICryptSLPredicateParameter> predForbiddenMethods = parameters;
-					for (ICryptSLPredicateParameter predForbMethod : predForbiddenMethods) {
-						//check whether predForbMethod is in foundForbMethods, which forbidden-methods analysis has to figure out
-						CryptSLMethod reqMethod = ((CryptSLMethod) predForbMethod);
+				}
 
-						for (Statement call : collectedCalls) {
-							if (!call.isCallsite())
-								continue;
-							SootMethod foundCall = call.getUnit().get().getInvokeExpr().getMethod();
-							Collection<SootMethod> convert = CryptSLMethodToSootMethod.v().convert(reqMethod);
-							if (convert.contains(foundCall)) {
-								errors.add(new ForbiddenMethodError(call, classSpec.getRule(), foundCall, convert));
-								return;
-							}
-						}
+				return;
+			case "length":
+				// pred looks as follows: neverTypeOf($varName)
+				// -> parameter is always the variable
+				String var = ((CryptSLObject) pred.getParameters().get(0)).getVarName();
+				for (CallSiteWithParamIndex cs : parsAndVals.keySet()) {
+					if (cs.getVarName().equals(var)) {
+						errors.add(new ImpreciseValueExtractionError(origin, cs.stmt(), classSpec.getRule()));
+						break;
 					}
-					return;
-				case "neverTypeOf":
-					//pred looks as follows: neverTypeOf($varName, $type)
-					// -> first parameter is always the variable
-					// -> second parameter is always the type
-					String varName = ((CryptSLObject) parameters.get(0)).getVarName();
-					for (CallSiteWithParamIndex cs : parameterAnalysisQuerySites) {
-						if (cs.getVarName().equals(varName)) {
-							Collection<Type> vals = propagatedTypes.get(cs);
-							for (Type t : vals) {
-								if (t.toQuotedString().equals(parameters.get(1).getName())) {
-									//TODO: Fix NeverTypeOfErrors also report a ConstraintError									
-									errors.add(new NeverTypeOfError(new CallSiteWithExtractedValue(cs, null), classSpec.getRule(), seed, pred));
-									return;
-								}
-							}
-						}
-					}
-
-					return;
-				case "length":
-					//pred looks as follows: neverTypeOf($varName)
-					// -> parameter is always the variable
-					String var = ((CryptSLObject) pred.getParameters().get(0)).getVarName();
-					for (CallSiteWithParamIndex cs : parsAndVals.keySet()) {
-						if (cs.getVarName().equals(var)) {
-							errors.add(new ImpreciseValueExtractionError(origin, cs.stmt(), classSpec.getRule()));
-							break;
-						}
-					}
-					return;
-				default:
-					return;
+				}
+				return;
+			default:
+				return;
 			}
 		}
 	}
@@ -320,45 +314,45 @@ public class ConstraintSolver {
 		public void evaluate() {
 			CryptSLComparisonConstraint compConstraint = (CryptSLComparisonConstraint) origin;
 
-			Map<Integer, CallSiteWithExtractedValue> left = evaluate(compConstraint.getLeft());
-			Map<Integer, CallSiteWithExtractedValue> right = evaluate(compConstraint.getRight());
+			Map<Long, CallSiteWithExtractedValue> left = evaluate(compConstraint.getLeft());
+			Map<Long, CallSiteWithExtractedValue> right = evaluate(compConstraint.getRight());
 
-			for (Entry<Integer, CallSiteWithExtractedValue> entry : right.entrySet()) {
+			for (Entry<Long, CallSiteWithExtractedValue> entry : right.entrySet()) {
 				if (entry.getKey() == Integer.MIN_VALUE) {
 					errors.add(new ConstraintError(entry.getValue(), classSpec.getRule(), seed, compConstraint));
 					return;
 				}
 			}
 
-			for (Entry<Integer, CallSiteWithExtractedValue> leftie : left.entrySet()) {
+			for (Entry<Long, CallSiteWithExtractedValue> leftie : left.entrySet()) {
 				if (leftie.getKey() == Integer.MIN_VALUE) {
 					errors.add(new ConstraintError(leftie.getValue(), classSpec.getRule(), seed, compConstraint));
 					return;
 				}
-				for (Entry<Integer, CallSiteWithExtractedValue> rightie : right.entrySet()) {
+				for (Entry<Long, CallSiteWithExtractedValue> rightie : right.entrySet()) {
 
 					boolean cons = true;
 					switch (compConstraint.getOperator()) {
-						case eq:
-							cons = leftie.getKey().equals(rightie.getKey());
-							break;
-						case g:
-							cons = leftie.getKey() > rightie.getKey();
-							break;
-						case ge:
-							cons = leftie.getKey() >= rightie.getKey();
-							break;
-						case l:
-							cons = leftie.getKey() < rightie.getKey();
-							break;
-						case le:
-							cons = leftie.getKey() <= rightie.getKey();
-							break;
-						case neq:
-							cons = leftie.getKey() != rightie.getKey();
-							break;
-						default:
-							cons = false;
+					case eq:
+						cons = leftie.getKey().equals(rightie.getKey());
+						break;
+					case g:
+						cons = leftie.getKey() > rightie.getKey();
+						break;
+					case ge:
+						cons = leftie.getKey() >= rightie.getKey();
+						break;
+					case l:
+						cons = leftie.getKey() < rightie.getKey();
+						break;
+					case le:
+						cons = leftie.getKey() <= rightie.getKey();
+						break;
+					case neq:
+						cons = leftie.getKey() != rightie.getKey();
+						break;
+					default:
+						cons = false;
 					}
 					if (!cons) {
 						errors.add(new ConstraintError(leftie.getValue(), classSpec.getRule(), seed, origin));
@@ -368,32 +362,32 @@ public class ConstraintSolver {
 			}
 		}
 
-		private Map<Integer, CallSiteWithExtractedValue> evaluate(CryptSLArithmeticConstraint arith) {
-			Map<Integer, CallSiteWithExtractedValue> left = extractValueAsInt(arith.getLeft(), arith);
-			Map<Integer, CallSiteWithExtractedValue> right = extractValueAsInt(arith.getRight(), arith);
-			for (Entry<Integer, CallSiteWithExtractedValue> rightie : right.entrySet()) {
+		private Map<Long, CallSiteWithExtractedValue> evaluate(CryptSLArithmeticConstraint arith) {
+			Map<Long, CallSiteWithExtractedValue> left = extractValueAsInt(arith.getLeft(), arith);
+			Map<Long, CallSiteWithExtractedValue> right = extractValueAsInt(arith.getRight(), arith);
+			for (Entry<Long, CallSiteWithExtractedValue> rightie : right.entrySet()) {
 				if (rightie.getKey() == Integer.MIN_VALUE) {
 					return left;
 				}
 			}
 
-			Map<Integer, CallSiteWithExtractedValue> results = new HashMap<>();
-			for (Entry<Integer, CallSiteWithExtractedValue> leftie : left.entrySet()) {
+			Map<Long, CallSiteWithExtractedValue> results = new HashMap<>();
+			for (Entry<Long, CallSiteWithExtractedValue> leftie : left.entrySet()) {
 				if (leftie.getKey() == Integer.MIN_VALUE) {
 					return left;
 				}
 
-				for (Entry<Integer, CallSiteWithExtractedValue> rightie : right.entrySet()) {
-					int sum = 0;
+				for (Entry<Long, CallSiteWithExtractedValue> rightie : right.entrySet()) {
+					long sum = 0;
 					switch (arith.getOperator()) {
-						case n:
-							sum = leftie.getKey() - rightie.getKey();
-							break;
-						case p:
-							sum = leftie.getKey() + rightie.getKey();
-							break;
-						default:
-							sum = 0;
+					case n:
+						sum = leftie.getKey() - rightie.getKey();
+						break;
+					case p:
+						sum = leftie.getKey() + rightie.getKey();
+						break;
+					default:
+						sum = 0;
 					}
 					if (rightie.getValue() != null) {
 						results.put(sum, rightie.getValue());
@@ -405,7 +399,8 @@ public class ConstraintSolver {
 			return results;
 		}
 
-		private Map<Integer, CallSiteWithExtractedValue> extractValueAsInt(ICryptSLPredicateParameter par, CryptSLArithmeticConstraint arith) {
+		private Map<Long, CallSiteWithExtractedValue> extractValueAsInt(ICryptSLPredicateParameter par,
+				CryptSLArithmeticConstraint arith) {
 			if (par instanceof CryptSLPredicate) {
 				PredicateConstraint predicateConstraint = new PredicateConstraint((CryptSLPredicate) par);
 				predicateConstraint.evaluate();
@@ -415,32 +410,31 @@ public class ConstraintSolver {
 					}
 					predicateConstraint.errors.clear();
 				}
-				return new HashMap<Integer, CallSiteWithExtractedValue>();
+				return new HashMap<Long, CallSiteWithExtractedValue>();
 			} else {
 				return extractValueAsInt(par.getName(), arith);
 			}
 		}
 
-		private Map<Integer, CallSiteWithExtractedValue> extractValueAsInt(String exp, ISLConstraint cons) {
-			final HashMap<Integer, CallSiteWithExtractedValue> valuesInt = new HashMap<>();
+		private Map<Long, CallSiteWithExtractedValue> extractValueAsInt(String exp, ISLConstraint cons) {
+			final HashMap<Long, CallSiteWithExtractedValue> valuesInt = new HashMap<>();
 			try {
-				//1. exp may (already) be an integer
-				valuesInt.put(Integer.parseInt(exp), null);
+				// 1. exp may (already) be an integer
+				valuesInt.put((long) Integer.parseInt(exp), null);
 				return valuesInt;
 			} catch (NumberFormatException ex) {
-				//2. If not, it's a variable name.
-				//Get value of variable left from map
-				final Entry<List<String>, CallSiteWithExtractedValue> valueCollection = extractValueAsString(exp, cons);
+				// 2. If not, it's a variable name.
+				// Get value of variable left from map
+				final Entry<List<AllocVal>, CallSiteWithExtractedValue> valueCollection = extractValueAsString(exp,
+						cons);
 				if (valueCollection.getKey().isEmpty()) {
 					return valuesInt;
 				}
-				try {
-					for (String value : valueCollection.getKey()) {
-						valuesInt.put(Integer.parseInt(value), valueCollection.getValue());
+				for (AllocVal value : valueCollection.getKey()) {
+					Optional<Long> v = getIntegerValue(value);
+					if (v.isPresent()) {
+						valuesInt.put(v.get(), valueCollection.getValue());
 					}
-				} catch (NumberFormatException ex1) {
-					//If that does not work either, I'm out of ideas ...
-					throw new RuntimeException();
 				}
 				return valuesInt;
 			}
@@ -461,7 +455,7 @@ public class ConstraintSolver {
 			CryptSLObject var = valCons.getVar();
 			final List<Entry<String, CallSiteWithExtractedValue>> vals = getValFromVar(var, valCons);
 			if (vals.isEmpty()) {
-				//TODO: Check whether this works as desired
+				// TODO: Check whether this works as desired
 				return;
 			}
 			for (Entry<String, CallSiteWithExtractedValue> val : vals) {
@@ -475,29 +469,41 @@ public class ConstraintSolver {
 
 		private List<Entry<String, CallSiteWithExtractedValue>> getValFromVar(CryptSLObject var, ISLConstraint cons) {
 			final String varName = var.getVarName();
-			final Entry<List<String>, CallSiteWithExtractedValue> valueCollection = extractValueAsString(varName, cons);
+			final Entry<List<AllocVal>, CallSiteWithExtractedValue> valueCollection = extractValueAsString(varName,
+					cons);
 			List<Entry<String, CallSiteWithExtractedValue>> vals = new ArrayList<>();
 			if (valueCollection.getKey().isEmpty()) {
 				return vals;
 			}
-			for (String val : valueCollection.getKey()) {
-				CryptSLSplitter splitter = var.getSplitter();
+			for (AllocVal allocVal : valueCollection.getKey()) {
+
 				final CallSiteWithExtractedValue location = valueCollection.getValue();
-				if (splitter != null) {
-					int ind = splitter.getIndex();
-					String splitElement = splitter.getSplitter();
-					if (ind > 0) {
-						String[] splits = val.split(splitElement);
-						if (splits.length > ind) {
-							vals.add(new AbstractMap.SimpleEntry<>(splits[ind], location));
+				Optional<Long> intVal = getIntegerValue(allocVal);
+				if (intVal.isPresent()) {
+					vals.add(new AbstractMap.SimpleEntry<>(intVal.get().toString(), location));
+				} else {
+					Optional<String> v = getStringValue(allocVal);
+					if (!v.isPresent()) {
+						continue;
+					}
+					String val = v.get();
+					CryptSLSplitter splitter = var.getSplitter();
+					if (splitter != null) {
+						int ind = splitter.getIndex();
+						String splitElement = splitter.getSplitter();
+						if (ind > 0) {
+							String[] splits = val.split(splitElement);
+							if (splits.length > ind) {
+								vals.add(new AbstractMap.SimpleEntry<>(splits[ind], location));
+							} else {
+								vals.add(new AbstractMap.SimpleEntry<>("", location));
+							}
 						} else {
-							vals.add(new AbstractMap.SimpleEntry<>("", location));
+							vals.add(new AbstractMap.SimpleEntry<>(val.split(splitElement)[ind], location));
 						}
 					} else {
-						vals.add(new AbstractMap.SimpleEntry<>(val.split(splitElement)[ind], location));
+						vals.add(new AbstractMap.SimpleEntry<>(val, location));
 					}
-				} else {
-					vals.add(new AbstractMap.SimpleEntry<>(val, location));
 				}
 			}
 			return vals;
@@ -524,39 +530,45 @@ public class ConstraintSolver {
 			return !errors.isEmpty();
 		}
 
-		protected Entry<List<String>, CallSiteWithExtractedValue> extractValueAsString(String varName, ISLConstraint cons) {
-			List<String> varVal = Lists.newArrayList();
+		protected Entry<List<AllocVal>, CallSiteWithExtractedValue> extractValueAsString(String varName,
+				ISLConstraint cons) {
+			List<AllocVal> varVal = Lists.newArrayList();
 			CallSiteWithExtractedValue witness = null;
-			for (CallSiteWithParamIndex wrappedCallSite : parsAndVals.keySet()) {
-				final Stmt callSite = wrappedCallSite.stmt().getUnit().get();
-
-				for (ForwardQuery wrappedAllocSite : parsAndVals.get(wrappedCallSite)) {
-					final Stmt allocSite = wrappedAllocSite.stmt().getUnit().get();
-
-					if (wrappedCallSite.getVarName().equals(varName)) {
-						if(wrappedAllocSite.var() instanceof AllocVal) {
-							AllocVal allocVal = (AllocVal) wrappedAllocSite.var();
-							varVal.add(retrieveConstantFromValue(allocVal.allocationValue()));
-							witness = new CallSiteWithExtractedValue(wrappedCallSite, ExtractedValue.fromQuery(wrappedAllocSite));
-						
-						}
-						if (callSite.equals(allocSite)) {
-							throw new RuntimeException("");
-//							varVal.add(retrieveConstantFromValue(callSite.getInvokeExpr().getArg(wrappedCallSite.getIndex())));
-//							witness = new CallSiteWithExtractedValue(wrappedCallSite, ExtractedValue.fromQuery(wrappedAllocSite));
-						} else if (allocSite instanceof AssignStmt) {
-							final Value rightSide = ((AssignStmt) allocSite).getRightOp();
-							if (rightSide instanceof Constant) {
-								varVal.add(retrieveConstantFromValue(rightSide));
-								witness = new CallSiteWithExtractedValue(wrappedCallSite, ExtractedValue.fromQuery(wrappedAllocSite));
-							} else {
-								errors.add(new ImpreciseValueExtractionError(cons, wrappedCallSite.stmt(), classSpec.getRule()));
-							}
-						}
-					}
+			for (Entry<CallSiteWithParamIndex, ForwardQuery> e : parsAndVals.entries()) {
+				CallSiteWithParamIndex wrappedCallSite = e.getKey();
+				ForwardQuery wrappedAllocSite = e.getValue();
+				if (!wrappedCallSite.getVarName().equals(varName)) {
+					continue;
+				}
+				if (wrappedAllocSite.var() instanceof AllocVal) {
+					AllocVal allocVal = (AllocVal) wrappedAllocSite.var();
+					varVal.add(allocVal);
+					witness = new CallSiteWithExtractedValue(wrappedCallSite,
+							ExtractedValue.fromQuery(wrappedAllocSite));
 				}
 			}
-			return new AbstractMap.SimpleEntry<List<String>, CallSiteWithExtractedValue>(varVal, witness);
+			return new AbstractMap.SimpleEntry<List<AllocVal>, CallSiteWithExtractedValue>(varVal, witness);
 		}
+	}
+
+	public Optional<String> getStringValue(AllocVal val) {
+		Value v = val.allocationValue();
+		if (v instanceof StringConstant) {
+			StringConstant sConstant = (StringConstant) v;
+			return Optional.of(sConstant.value);
+		}
+		return Optional.absent();
+	}
+
+	public Optional<Long> getIntegerValue(AllocVal val) {
+		Value v = val.allocationValue();
+		if (v instanceof IntConstant) {
+			IntConstant intConstant = (IntConstant) v;
+			return Optional.of((long) intConstant.value);
+		} else if (v instanceof LongConstant) {
+			LongConstant longConstant = (LongConstant) v;
+			return Optional.of(longConstant.value);
+		}
+		return Optional.absent();
 	}
 }

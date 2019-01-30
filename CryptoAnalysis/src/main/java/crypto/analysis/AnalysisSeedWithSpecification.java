@@ -10,6 +10,9 @@ import java.util.Map.Entry;
 
 import javax.crypto.SecretKey;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.Set;
 
 import com.google.common.collect.HashMultimap;
@@ -68,6 +71,7 @@ import typestate.finiteautomata.State;
 
 public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
+	private static final Logger logger = LogManager.getLogger();
 	private final ClassSpecification spec;
 	private ExtendedIDEALAnaylsis analysis;
 	private ForwardBoomerangResults<TransitionFunction> results;
@@ -239,7 +243,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 						} else {
 							for(Cell<IAnalysisSeed, CryptSLPredicate, Statement> s : generatedPredicates.cellSet()) {
 								if(s.getValue().equals(currStmt)) {
-									System.out.println("Add Predicate for " + s.getRowKey());
 									s.getRowKey().addPredicateStartingFrom(currStmt,new RequiredCryptSLPredicate(s.getColumnKey(), currStmt));
 								}
 							}
@@ -251,9 +254,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	}
 	
 	private void triggerNewDataFlowForPotenialPredicate(Statement currStmt, State stateNode, CryptSLPredicate potentialPredicate) {
-//		//This logic is wrong here.
-		
-		System.out.println(currStmt + " " + this) ;
 		InvokeExpr ie = ((Stmt) currStmt.getUnit().get()).getInvokeExpr();
 		SootMethod invokedMethod = ie.getMethod();
 		Collection<CryptSLMethod> convert = CryptSLMethodToSootMethod.v().convert(invokedMethod);
@@ -282,11 +282,9 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 						SecretKey key = keygen.generateKey();
 					 */
 					
-					//TODO add logic for depend on this at currStmt. 
-					
 					for (ClassSpecification spec : cryptoScanner.getClassSpecifictions()) {
 						if (spec.getRule().getClassName().equals(refType.getSootClass().getName())) {
-							//This is a weird way;
+							//Special handling for rule SecretKey and KeyPair
 							AnalysisSeedWithSpecification seed = cryptoScanner.getOrCreateSeedWithSpec(
 									new AnalysisSeedWithSpecification(cryptoScanner, currStmt, val, spec));
 							seed.addDependsOn(this, currStmt);
@@ -308,7 +306,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 					Value param = ie.getArg(i);
 					if (param instanceof Local) {
 						Val val = new Val(param, currStmt.getMethod());
-						//Potential for being unsound: The function findSeedsForValAtStatement requires the analysis of other seed to be done... 
+						//Potential for non-deterministic results: The function findSeedsForValAtStatement requires the analysis of other seed to be done... 
 						// Would need another fix-point iteration
 						Set<IAnalysisSeed> seeds = cryptoScanner.findSeedsForValAtStatement(new Node<Statement,Val>(currStmt,val), true);
 						for(IAnalysisSeed s : seeds) {
@@ -344,23 +342,11 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			CryptSLPredicate potentialPredicate) {
 		if (results == null)
 			return;
-		System.out.println("GENERATING STATE " + state);
 		for(Statement s : getStatementsWithState(state)){
-			System.out.println(s+  "   " + potentialPredicate);
 			ensuredPredicatesAtStatement.put(s, new RequiredCryptSLPredicate(potentialPredicate, s));
 		}
-//		for (Cell<Statement, Val, TransitionFunction> e : results.asStatementValWeightTable().cellSet()) {
-//			if(!e.getRowKey().equals(currStmt))
-//				continue;
-//			if (containsTargetState(e.getValue(), stateNode)) {
-//				ensuredPredicatesAtStatement.put(e.getRowKey(), new RequiredCryptSLPredicate(potentialPredicate, e.getRowKey()));
-//			}
-//		}
 	}
 
-	private boolean containsTargetState(TransitionFunction value, State stateNode) {
-		return getTargetStates(value).contains(stateNode);
-	}
 
 	private Collection<? extends State> getTargetStates(TransitionFunction value) {
 		Set<State> res = Sets.newHashSet();
@@ -380,17 +366,17 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			return false;
 		}
 		boolean changed = false;
-		System.out.println("=====ENSURES=====");
-		System.out.println("this" + this);
+		logger.debug("=====ENSURES=====");
+		logger.debug("this" + this);
 		for(Entry<Statement, RequiredCryptSLPredicate> e : ensuredPredicatesAtStatement.entries()) {
-			System.out.println(e);
+			logger.debug(e);
 		}
 		
-		System.out.println("=====REQUIRED=====");
-		System.out.println("this" + this);
+		logger.debug("=====REQUIRED=====");
+		logger.debug("this" + this);
 		Multimap<ForwardQuery, RequiredCryptSLPredicate> removablePredicate = HashMultimap.create();
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : this.requiredPredicates.entries()) {
-			System.out.println(e);
+			logger.debug(e);
 			if(e.getKey() instanceof IAnalysisSeed) {
 				IAnalysisSeed iAnalysisSeed = (IAnalysisSeed) e.getKey();
 				if(!e.getValue().getPred().isNegated() && iAnalysisSeed.hasEnsuredPredicate(e.getValue())) {
@@ -401,7 +387,6 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		}
 
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : removablePredicate.entries()) {
-			System.out.println("REMOVING " + e);
 			this.requiredPredicates.remove(e.getKey(), e.getValue());	
 		}
 		
@@ -608,8 +593,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		constraintSolver = new ConstraintSolver(this, cryptoScanner.getAnalysisListener());
 		internalConstraintSatisfied = (constraintSolver.evaluateRelConstraints() == 0);
 		if(!internalConstraintSatisfied) {
-			System.out.println(" Does not satisfy internal constraints");
-			System.out.println(this);
+			logger.debug("Internal constraints not satisfied by " + this);
 		}
 	}
 

@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.inject.internal.util.Sets;
@@ -47,6 +50,7 @@ public abstract class CryptoScanner {
 	private final List<ClassSpecification> specifications = Lists.newLinkedList();
 	private final PredicateHandler predicateHandler = new PredicateHandler(this);
 	private CrySLResultsReporter resultsAggregator = new CrySLResultsReporter();
+	private static final Logger logger = LogManager.getLogger();
 
 	private DefaultValueMap<Node<Statement, Val>, AnalysisSeedWithEnsuredPredicate> seedsWithoutSpec = new DefaultValueMap<Node<Statement, Val>, AnalysisSeedWithEnsuredPredicate>() {
 
@@ -87,17 +91,17 @@ public abstract class CryptoScanner {
 		CrySLResultsReporter listener = getAnalysisListener();
 		listener.beforeAnalysis();
 		analysisWatch = Stopwatch.createStarted();
-		System.out.println("Searching fo Seeds for analysis!");
+		logger.info("Searching fo Seeds for analysis!");
 		computeSeeds();
 		long elapsed = analysisWatch.elapsed(TimeUnit.SECONDS);
-		System.out.println("Discovered " + worklist.size() + " analysis seeds within " + elapsed + " seconds!");
+		logger.info("Discovered " + worklist.size() + " analysis seeds within " + elapsed + " seconds!");
 		while (!worklist.isEmpty()) {
 			IAnalysisSeed curr = worklist.poll();
-			listener.discoveredSeed(curr);
 			curr.execute();
 			estimateAnalysisTime();
 		}
 
+		logger.info("Dataflow analysis done, now checking internal constraints and predicates");
 		checkPredicates();
 
 		for (AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
@@ -108,7 +112,7 @@ public abstract class CryptoScanner {
 		
 		listener.afterAnalysis();
 		elapsed = analysisWatch.elapsed(TimeUnit.SECONDS);
-		System.out.println("Static Analysis took " + elapsed + " seconds!");
+		logger.info("Static Analysis took " + elapsed + " seconds!");
 //		debugger().afterAnalysis();
 	}
 
@@ -116,16 +120,15 @@ public abstract class CryptoScanner {
 		seedsWithoutSpec.put(value.asNode(), value);
 	}
 	private void checkPredicates() {
-		System.out.println("===== COMBINE FLOWS RELATION ====== ");
 		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
 			seed.getParameterAnalysis().combineDataFlowsForRuleObjects();
 			getAnalysisListener().collectedValues(seed, seed.getParameterAnalysis().getCollectedValues());
 		}
-		System.out.println("===== EVALUTE INTERNAL CONSTRAINTS AND GENERATE REQUIRED PREDICATES ====== ");
+		logger.info("Evaluating internal constraints and generating REQUIRE predicates");
 		for(AnalysisSeedWithSpecification seed : getAnalysisSeeds()) {
 			seed.evaluateInternalConstraints();
 		}
-		System.out.println("===== FIX POINT FOR ENSURES ====== ");
+		logger.info("Starting fix point for ENSURE clause");
 		checkMissingRequiredPredicates();
 	}
 
@@ -262,7 +265,6 @@ public abstract class CryptoScanner {
 				BackwardBoomerangResults<NoWeight> res = boomerang.solve(bwQ);
 				for(ForwardQuery q : res.getAllocationSites().keySet()) {
 					results.addAll(findSeedsFor(q));
-					System.out.println(q);
 					if(results.isEmpty()) {
 						AnalysisSeedWithEnsuredPredicate analysisSeedWithEnsuredPredicate = new AnalysisSeedWithEnsuredPredicate(this, q.asNode(), res.asStatementValWeightTable(q));
 						addSeed(analysisSeedWithEnsuredPredicate);

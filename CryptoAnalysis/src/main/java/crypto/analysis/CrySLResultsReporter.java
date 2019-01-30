@@ -42,12 +42,6 @@ public class CrySLResultsReporter  {
 		}
 	}
 
-	public void discoveredSeed(IAnalysisSeed curr) {
-		for (ICrySLResultsListener listen : listeners) {
-			listen.discoveredSeed(curr);
-		}
-	}
-
 	public void ensuredPredicates(Table<Statement, Val, Set<EnsuredCryptSLPredicate>> existingPredicates, Table<Statement, IAnalysisSeed, Set<CryptSLPredicate>> expectedPredicates, Table<Statement, IAnalysisSeed, Set<CryptSLPredicate>> missingPredicates) {
 		for (ICrySLResultsListener listen : listeners) {
 			if (listen instanceof CrySLAnalysisListener) {
