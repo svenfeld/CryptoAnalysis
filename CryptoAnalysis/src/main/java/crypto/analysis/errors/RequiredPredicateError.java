@@ -2,25 +2,26 @@ package crypto.analysis.errors;
 
 import boomerang.jimple.Statement;
 import crypto.extractparameter.CallSiteWithExtractedValue;
+import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.rules.CryptSLPredicate;
 import crypto.rules.CryptSLRule;
 
 public class RequiredPredicateError extends AbstractError{
 
 	private CryptSLPredicate contradictedPredicate;
-	private CallSiteWithExtractedValue extractedValues;
+	private CallSiteWithParamIndex extractedValues;
 
-	public RequiredPredicateError(CryptSLPredicate contradictedPredicate, Statement location, CryptSLRule rule, CallSiteWithExtractedValue multimap) {
+	public RequiredPredicateError(CryptSLPredicate contradictedPredicate, Statement location, CryptSLRule rule, CallSiteWithParamIndex callSite) {
 		super(location, rule);
 		this.contradictedPredicate = contradictedPredicate;
-		this.extractedValues = multimap;
+		this.extractedValues = callSite;
 	}
 
 	public CryptSLPredicate getContradictedPredicate() {
 		return contradictedPredicate;
 	}
 	
-	public CallSiteWithExtractedValue getExtractedValues() {
+	public CallSiteWithParamIndex getExtractedValues() {
 		return extractedValues;
 	}
 	

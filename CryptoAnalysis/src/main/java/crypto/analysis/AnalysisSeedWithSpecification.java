@@ -29,6 +29,7 @@ import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import boomerang.results.ForwardBoomerangResults;
 import crypto.analysis.errors.IncompleteOperationError;
+import crypto.analysis.errors.RequiredPredicateError;
 import crypto.analysis.errors.TypestateError;
 import crypto.constraints.ConstraintSolver;
 import crypto.constraints.ConstraintSolver.EvaluableConstraint;
@@ -82,6 +83,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	private boolean secure = true;
 	private boolean internalConstraintSatisfied;
 	private Set<IAnalysisSeed> dependsOnOtherObject = Sets.newHashSet();
+	private Multimap<RequiredCryptSLPredicate, CallSiteWithParamIndex> requiredPredicatesToCallSite = HashMultimap.create();
 	
 
 	public AnalysisSeedWithSpecification(CryptoScanner cryptoScanner, Statement stmt, Val val,
@@ -598,7 +600,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	}
 
 	public void addRequiredPredicate(ForwardQuery requiringObjectAllocation,
-			RequiredCryptSLPredicate requiredCryptSLPredicate) {
+			RequiredCryptSLPredicate requiredCryptSLPredicate, CallSiteWithParamIndex callSite) {
 		//Remove conditional Predicates straight away.
 		final ISLConstraint conditional = requiredCryptSLPredicate.getPred().getConstraint();
 		if (conditional != null) {
@@ -613,7 +615,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		if (ConstraintSolver.predefinedPreds.contains(requiredCryptSLPredicate.getPred().getPredName())) {
 			return;
 		}
-		
+		requiredPredicatesToCallSite.put(requiredCryptSLPredicate, callSite);
 		requiredPredicates.put(requiringObjectAllocation, requiredCryptSLPredicate);
 	}
 	@Override
@@ -649,6 +651,18 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 			states.addAll(getTargetStates(weight));
 		}
 		return states;
+	}
+
+	public void reportMissingPredicates() {
+		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : requiredPredicates.entries()) {
+			if(e.getValue().getPred().isNegated())
+				continue;
+			for(CallSiteWithParamIndex cs : requiredPredicatesToCallSite.get(e.getValue())) {
+				if(!cs.stmt().equals(e.getValue().getLocation()))
+					continue;
+				cryptoScanner.getAnalysisListener().reportError(this, new RequiredPredicateError(e.getValue().getPred(), e.getValue().getLocation(), this.getSpec().getRule(), cs));
+			}
+		}
 	}
 	
 }

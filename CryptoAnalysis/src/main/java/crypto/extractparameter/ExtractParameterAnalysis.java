@@ -34,7 +34,6 @@ public class ExtractParameterAnalysis {
 	private CryptoScanner cryptoScanner;
 	private Multimap<CallSiteWithParamIndex, ForwardQuery> collectedValues = HashMultimap.create();
 	private Multimap<CallSiteWithParamIndex, Type> propagatedTypes = HashMultimap.create();
-	private Collection<BackwardQuery> queries = Sets.newHashSet();
 
 	public ExtractParameterAnalysis(CryptoScanner cryptoScanner, Map<Statement, SootMethod> allCallsOnObject,
 			SootBasedStateMachineGraph fsm) {

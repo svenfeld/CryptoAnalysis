@@ -140,6 +140,10 @@ public abstract class CryptoScanner {
 				hasPredicateRemoved |= seed.checkPredicates();
 			}
 		}
+		
+		for(AnalysisSeedWithSpecification seed : this.seedsWithSpec.values()) {
+			seed.reportMissingPredicates();
+		}
 	}
 
 	

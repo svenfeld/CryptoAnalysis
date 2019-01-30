@@ -3,10 +3,10 @@ package crypto.extractparameter;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 
-public class CallSiteWithParamIndex{
+public class CallSiteWithParamIndex {
 
 	private String varName;
-	
+
 	/**
 	 * @return the varName
 	 */
@@ -28,10 +28,32 @@ public class CallSiteWithParamIndex{
 	public int getIndex() {
 		return index;
 	}
-	
+
 	@Override
 	public String toString() {
-		return varName +" at " +stmt() + " and " +index;
+		String res = "";
+		switch (index) {
+		case 0:
+			res = "First ";
+			break;
+		case 1:
+			res = "Second ";
+			break;
+		case 2:
+			res = "Third ";
+			break;
+		case 3:
+			res = "Fourth ";
+			break;
+		case 4:
+			res = "Fiveth ";
+			break;
+		case 5:
+			res = "Sixth ";
+			break;
+		}
+		res += "parameter";
+		return res;
 	}
 
 	@Override
@@ -76,6 +98,4 @@ public class CallSiteWithParamIndex{
 		return statement;
 	}
 
-	
-	
 }

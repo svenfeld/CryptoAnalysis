@@ -59,7 +59,7 @@ import soot.jimple.StringConstant;
 public class ConstraintSolver {
 
 	private final List<ISLConstraint> allConstraints;
-	private final List<ISLConstraint> relConstraints;
+	private final Set<ISLConstraint> relConstraints = Sets.newHashSet();
 	private final Collection<Statement> collectedCalls;
 	private final Multimap<CallSiteWithParamIndex, ForwardQuery> parsAndVals;
 	public final static List<String> predefinedPreds = Arrays.asList("callTo", "noCallTo", "neverTypeOf", "length");
@@ -77,7 +77,6 @@ public class ConstraintSolver {
 		this.parameterAnalysisQuerySites = seed.getParameterAnalysis().getCollectedValues().keySet();
 		this.collectedCalls = seed.getAllCallsOnObject().keySet();
 		this.allConstraints = this.classSpec.getRule().getConstraints();
-		this.relConstraints = new ArrayList<ISLConstraint>();
 		this.reporter = crySLResultsReporter;
 	}
 
@@ -102,7 +101,7 @@ public class ConstraintSolver {
 									continue;
 								relConstraints.add(pred);
 								seed.addRequiredPredicate(e.getValue(),
-										new RequiredCryptSLPredicate(pred, cwpi.stmt()));
+										new RequiredCryptSLPredicate(pred, cwpi.stmt()), cwpi);
 							}
 						}
 
@@ -149,13 +148,6 @@ public class ConstraintSolver {
 	 */
 	public List<ISLConstraint> getAllConstraints() {
 		return allConstraints;
-	}
-
-	/**
-	 * @return the relConstraints
-	 */
-	public List<ISLConstraint> getRelConstraints() {
-		return relConstraints;
 	}
 
 	private class BinaryConstraint extends EvaluableConstraint {
@@ -277,10 +269,8 @@ public class ConstraintSolver {
 						Collection<Type> vals = propagatedTypes.get(cs);
 						for (Type t : vals) {
 							if (t.toQuotedString().equals(parameters.get(1).getName())) {
-								// TODO: Fix NeverTypeOfErrors also report a ConstraintError
 								errors.add(new NeverTypeOfError(new CallSiteWithExtractedValue(cs, null),
 										classSpec.getRule(), seed, pred));
-								return;
 							}
 						}
 					}

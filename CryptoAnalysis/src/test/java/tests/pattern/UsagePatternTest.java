@@ -903,26 +903,6 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 		md.digest();
 	}
 
-
-	@Test
-	public void UsagePatternTest20() throws GeneralSecurityException, UnsupportedEncodingException {
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		Assertions.extValue(0);
-		final byte[] input = "input".getBytes("UTF-8");
-		final byte[] input2 = "input2".getBytes("UTF-8");
-		byte[] output = md.digest(input);
-		Assertions.hasEnsuredPredicate(input);
-		Assertions.hasEnsuredPredicate(output);
-		Assertions.mustBeInAcceptingState(md);
-
-		md = MessageDigest.getInstance("MD5");
-		output = md.digest(input2);
-		Assertions.mustBeInAcceptingState(md);
-		//Probably not checkable as we kill the predicate here
-		Assertions.notHasEnsuredPredicate(input2);
-		Assertions.notHasEnsuredPredicate(output);
-	}
-
 	
 	@Test
 	public void secretKeyTest() throws NoSuchAlgorithmException, DestroyFailedException {
