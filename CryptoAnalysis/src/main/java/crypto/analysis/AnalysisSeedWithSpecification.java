@@ -361,9 +361,9 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 
 
 	public boolean checkPredicates() {
-		if(!internalConstraintSatisfied) {
-			return false;
-		}
+//		if(!internalConstraintSatisfied) {
+//			return false;
+//		}
 		if(ensuresPredicates) {
 			return false;
 		}
@@ -414,7 +414,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		}
 		ensuresPredicates = allRequiredPredicatesFullFilled && dependsOnOtherObject.isEmpty();
 		//Does that makes sense?
-		if(ensuresPredicates)
+		if(ensuresPredicates && internalConstraintSatisfied)
 			addPredicatesOnOtherObjects();
 		return changed || ensuresPredicates;
 	}
@@ -615,8 +615,10 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		if (ConstraintSolver.predefinedPreds.contains(requiredCryptSLPredicate.getPred().getPredName())) {
 			return;
 		}
-		requiredPredicatesToCallSite.put(requiredCryptSLPredicate, callSite);
-		requiredPredicates.put(requiringObjectAllocation, requiredCryptSLPredicate);
+		System.out.println(this + " requires " + requiredCryptSLPredicate + " at " + callSite);
+		System.out.println("from " + requiringObjectAllocation);
+		System.out.println(requiredPredicatesToCallSite.put(requiredCryptSLPredicate, callSite));
+		System.out.println(requiredPredicates.put(requiringObjectAllocation, requiredCryptSLPredicate));
 	}
 	@Override
 	public boolean hasEnsuredPredicate(RequiredCryptSLPredicate pred) {
@@ -654,13 +656,18 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 	}
 
 	public void reportMissingPredicates() {
+		//Collapsing the actual object that the required predicates could stem from. Simply to remove duplicated reporting.
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : requiredPredicates.entries()) {
-			if(e.getValue().getPred().isNegated())
+			System.out.println(this);
+			System.out.println("MISSING " + e);
+		}
+		for(RequiredCryptSLPredicate e : Sets.newHashSet(requiredPredicates.values())) {
+			if(e.getPred().isNegated())
 				continue;
-			for(CallSiteWithParamIndex cs : requiredPredicatesToCallSite.get(e.getValue())) {
-				if(!cs.stmt().equals(e.getValue().getLocation()))
+			for(CallSiteWithParamIndex cs : requiredPredicatesToCallSite.get(e)) {
+				if(!cs.stmt().equals(e.getLocation()))
 					continue;
-				cryptoScanner.getAnalysisListener().reportError(this, new RequiredPredicateError(e.getValue().getPred(), e.getValue().getLocation(), this.getSpec().getRule(), cs));
+				cryptoScanner.getAnalysisListener().reportError(this, new RequiredPredicateError(e.getPred(), e.getLocation(), this.getSpec().getRule(), cs));
 			}
 		}
 	}

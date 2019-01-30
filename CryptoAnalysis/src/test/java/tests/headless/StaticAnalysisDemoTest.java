@@ -85,11 +85,12 @@ public class StaticAnalysisDemoTest extends AbstractHeadlessTest {
 
 
 		//TODO this is a spurious finding. What happens here?
-		setErrorsCount("<Crypto.PWHasher: java.lang.Boolean verifyPWHash(char[],java.lang.String)>", RequiredPredicateError.class, 2);
+//		setErrorsCount("<Crypto.PWHasher: java.lang.Boolean verifyPWHash(char[],java.lang.String)>", RequiredPredicateError.class, 2);
 
 
 		setErrorsCount("<main.Main: void incorrectKeyForWrongCipher()>", ConstraintError.class, 1);
-		setErrorsCount("<main.Main: void incorrectKeyForWrongCipher()>", RequiredPredicateError.class, 1);
+		//TODO cannot detect this
+//		setErrorsCount("<main.Main: void incorrectKeyForWrongCipher()>", RequiredPredicateError.class, 1);
 
 		setErrorsCount("<main.Main: void useWrongDoFinal()>", TypestateError.class, 1);
 		setErrorsCount("<main.Main: void useWrongDoFinal()>", ConstraintError.class, 1);

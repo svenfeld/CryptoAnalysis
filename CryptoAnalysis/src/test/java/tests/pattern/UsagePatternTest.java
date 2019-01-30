@@ -1008,4 +1008,17 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 	    IvParameterSpec iv = new IvParameterSpec(seed); // "First parameter was not properly randomized"
 	    Assertions.notHasEnsuredPredicate(iv);
 	}
+	
+	@Test
+	public void minimal() throws GeneralSecurityException{
+		String trans = "AES";
+		KeyGenerator keygen = KeyGenerator.getInstance("AES");
+		keygen.init(128);
+		SecretKey key = keygen.generateKey();
+		Assertions.hasEnsuredPredicate(key);
+		Cipher cCipher = Cipher.getInstance(trans);
+		cCipher.init(Cipher.ENCRYPT_MODE, key);
+		byte[] encText = cCipher.doFinal("".getBytes());
+		Assertions.notHasEnsuredPredicate(encText);
+	}
 }
