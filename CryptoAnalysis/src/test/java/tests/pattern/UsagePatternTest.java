@@ -86,6 +86,7 @@ public class UsagePatternTest extends UsagePatternTestingFramework {
 
 		Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		Assertions.extValue(0);
+		Assertions.hasEnsuredPredicate(key);
 		c.init(Cipher.ENCRYPT_MODE, key);
 		byte[] res = c.doFinal("message".getBytes(), 0, "message".getBytes().length);
 		Assertions.mustBeInAcceptingState(c);

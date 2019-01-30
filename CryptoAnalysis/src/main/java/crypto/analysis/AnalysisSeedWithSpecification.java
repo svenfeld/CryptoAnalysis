@@ -394,6 +394,7 @@ public class AnalysisSeedWithSpecification extends IAnalysisSeed {
 		}
 
 		for(Entry<ForwardQuery, RequiredCryptSLPredicate> e : removablePredicate.entries()) {
+			System.out.println("REMOVING " + e);
 			this.requiredPredicates.remove(e.getKey(), e.getValue());	
 		}
 		
