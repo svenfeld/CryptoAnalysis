@@ -3,7 +3,6 @@ package test;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +17,7 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 
 import boomerang.BackwardQuery;
+import boomerang.ForwardQuery;
 import boomerang.Query;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
@@ -30,6 +30,7 @@ import crypto.analysis.CrySLResultsReporter;
 import crypto.analysis.CryptoScanner;
 import crypto.analysis.EnsuredCryptSLPredicate;
 import crypto.analysis.IAnalysisSeed;
+import crypto.analysis.RequiredCryptSLPredicate;
 import crypto.analysis.errors.AbstractError;
 import crypto.analysis.errors.ConstraintError;
 import crypto.analysis.errors.ErrorVisitor;
@@ -41,9 +42,7 @@ import crypto.analysis.errors.PredicateContradictionError;
 import crypto.analysis.errors.RequiredPredicateError;
 import crypto.analysis.errors.TypestateError;
 import crypto.extractparameter.CallSiteWithParamIndex;
-import crypto.extractparameter.ExtractedValue;
 import crypto.interfaces.CrySLModelReader;
-import crypto.interfaces.ISLConstraint;
 import crypto.rules.CryptSLPredicate;
 import crypto.rules.CryptSLRule;
 import crypto.rules.CryptSLRuleReader;
@@ -62,6 +61,7 @@ import sync.pds.solver.nodes.Node;
 import test.assertions.Assertions;
 import test.assertions.CallToForbiddenMethodAssertion;
 import test.assertions.ConstraintErrorCountAssertion;
+import test.assertions.EnsuredPredicateAssertion;
 import test.assertions.ExtractedValueAssertion;
 import test.assertions.HasEnsuredPredicateAssertion;
 import test.assertions.InAcceptingStateAssertion;
@@ -108,7 +108,7 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 
 							@Override
 							public void collectedValues(AnalysisSeedWithSpecification seed,
-									Multimap<CallSiteWithParamIndex, ExtractedValue> collectedValues) {
+									Multimap<CallSiteWithParamIndex, ForwardQuery> collectedValues) {
 								for(Assertion a : expectedResults){
 									if(a instanceof ExtractedValueAssertion){
 										((ExtractedValueAssertion) a).computedValues(collectedValues);
@@ -214,26 +214,6 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 							public void ensuredPredicates(Table<Statement, Val, Set<EnsuredCryptSLPredicate>> existingPredicates,
 									Table<Statement, IAnalysisSeed, Set<CryptSLPredicate>> expectedPredicates,
 									Table<Statement, IAnalysisSeed, Set<CryptSLPredicate>> missingPredicates) {
-								for(Cell<Statement, Val, Set<EnsuredCryptSLPredicate>> c : existingPredicates.cellSet()){
-									for(Assertion e : expectedResults){
-										if(e instanceof HasEnsuredPredicateAssertion){
-											HasEnsuredPredicateAssertion assertion = (HasEnsuredPredicateAssertion) e;
-											if(assertion.getStmt().equals(c.getRowKey().getUnit().get())){
-												for(EnsuredCryptSLPredicate pred : c.getValue()){
-													assertion.reported(c.getColumnKey(),pred);
-												}	
-											}
-										}
-										if(e instanceof NotHasEnsuredPredicateAssertion){
-											NotHasEnsuredPredicateAssertion assertion = (NotHasEnsuredPredicateAssertion) e;
-											if(assertion.getStmt().equals(c.getRowKey().getUnit().get())){
-												for(EnsuredCryptSLPredicate pred : c.getValue()){
-													assertion.reported(c.getColumnKey(),pred);
-												}	
-											}
-										}
-									}
-								}
 							}
 
 							@Override
@@ -253,43 +233,13 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 
 
 							@Override
-							public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification,
-									Collection<ISLConstraint> relConstraints) {
-								
-							}
-
-							@Override
 							public void beforeAnalysis() {
 								
 							}
 
 							@Override
 							public void afterAnalysis() {
-								
-							}
-
-							@Override
-							public void beforeConstraintCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
-							}
-
-							@Override
-							public void afterConstraintCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
-							}
-
-							@Override
-							public void beforePredicateCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
-							}
-
-							@Override
-							public void afterPredicateCheck(
-									AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-								
+							
 							}
 
 						
@@ -328,6 +278,18 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 
 				};
 				scanner.scan(getRules(scanner.rulesInSrcFormat()));
+				for(Assertion e : expectedResults){
+					if(e instanceof EnsuredPredicateAssertion){
+						EnsuredPredicateAssertion assertion = (EnsuredPredicateAssertion) e;
+						Node<Statement,Val> node = new Node<Statement,Val>(assertion.getStmt(),assertion.getAccessGraph());
+						Set<IAnalysisSeed> seeds = scanner.findSeedsForValAtStatement(node, false);
+						for(IAnalysisSeed s : seeds) {
+							for(RequiredCryptSLPredicate pred : s.getPredicatesAtStatement(assertion.getStmt())) {
+								assertion.reported(node.fact(),pred);
+							}
+						}
+					}
+				}
 				
 				List<Assertion> unsound = Lists.newLinkedList();
 				List<Assertion> imprecise = Lists.newLinkedList();
@@ -357,7 +319,7 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 	public List<String> excludedPackages() {
 		List<String> excludedPackages = super.excludedPackages();
 		for(CryptSLRule r : getRules(false)) {
-			excludedPackages.add(Utils.getFullyQualifiedName(r));
+			excludedPackages.add(Utils.getFullyQualifiedName(r).toString());
 		}
 		return excludedPackages;
 	}
@@ -441,7 +403,7 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 					continue;
 				Local queryVar = (Local) param;
 				Val val = new Val(queryVar, m);
-				queries.add(new HasEnsuredPredicateAssertion(stmt, val));
+				queries.add(new HasEnsuredPredicateAssertion(new Statement(stmt, m), val));
 			}
 			
 			if(invocationName.startsWith("notHasEnsuredPredicate")){
@@ -450,7 +412,7 @@ public abstract class UsagePatternTestingFramework extends AbstractTestingFramew
 					continue;
 				Local queryVar = (Local) param;
 				Val val = new Val(queryVar, m);
-				queries.add(new NotHasEnsuredPredicateAssertion(stmt, val));
+				queries.add(new NotHasEnsuredPredicateAssertion(new Statement(stmt, m), val));
 			}
 			
 			if(invocationName.startsWith("mustNotBeInAcceptingState")){

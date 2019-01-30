@@ -1,15 +1,12 @@
 package crypto.analysis;
 
-import java.util.Set;
-
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
-import boomerang.results.ForwardBoomerangResults;
 import crypto.rules.StateMachineGraph;
 import crypto.rules.StateNode;
 import crypto.rules.TransitionEdge;
@@ -21,39 +18,31 @@ import soot.Unit;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
 import sync.pds.solver.nodes.Node;
 import typestate.TransitionFunction;
+import wpds.impl.Weight;
 
 public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 
-	private ForwardBoomerangResults<TransitionFunction> analysisResults;
-	private Set<EnsuredCryptSLPredicate> ensuredPredicates = Sets.newHashSet();
+	
 	private ExtendedIDEALAnaylsis problem;
-	private boolean analyzed;
 
 	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate) {
 		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
+		this.ensuresPredicates = true;
 	}
 
+	public AnalysisSeedWithEnsuredPredicate(CryptoScanner cryptoScanner, Node<Statement,Val> delegate, Table<Statement, Val, ? extends Weight> results) {
+		super(cryptoScanner,delegate.stmt(),delegate.fact(), TransitionFunction.one());
+		this.analysisResults = results;
+		this.ensuresPredicates = true;
+	}
+	
 	@Override
 	public void execute() {
 		cryptoScanner.getAnalysisListener().seedStarted(this);
 		ExtendedIDEALAnaylsis solver = getOrCreateAnalysis();
 		solver.run(this);
-		analysisResults = solver.getResults();
-		for(EnsuredCryptSLPredicate pred : ensuredPredicates)
-			ensurePredicates(pred);
-		cryptoScanner.getAnalysisListener().onSeedFinished(this, analysisResults);
-		analyzed = true;
+		analysisResults = solver.getResults().asStatementValWeightTable();
 	}
-
-	protected void ensurePredicates(EnsuredCryptSLPredicate pred) {
-		if(analysisResults == null)
-			return;
-
-		for(Cell<Statement, Val, TransitionFunction> c : analysisResults.asStatementValWeightTable().cellSet()){
-			predicateHandler.addNewPred(this,c.getRowKey(), c.getColumnKey(), pred);
-		}
-	}
-
 
 	private ExtendedIDEALAnaylsis getOrCreateAnalysis() {
 		problem = new ExtendedIDEALAnaylsis() {
@@ -91,14 +80,24 @@ public class AnalysisSeedWithEnsuredPredicate extends IAnalysisSeed{
 		return problem;
 	}
 
-	public void addEnsuredPredicate(EnsuredCryptSLPredicate pred) {
-		if(ensuredPredicates.add(pred) && analyzed)
-			ensurePredicates(pred);
-	}
-
-
 	@Override
 	public String toString() {
-		return "AnalysisSeedWithEnsuredPredicate:"+this.asNode() +" " + ensuredPredicates; 
+		return "AnalysisSeedWithEnsuredPredicate:"+this.var().value()+"@"+ this.stmt()+" "; 
 	}
+
+	public boolean reaches(Node<Statement, Val> node) {
+		return analysisResults != null && analysisResults.row(node.stmt()).containsKey(node.fact());
+	}
+
+	@Override
+	public void addPredicateStartingFrom(Statement currStmt, RequiredCryptSLPredicate requiredCryptSLPredicate) {
+		if(analysisResults == null)
+			return;
+		for (Cell<Statement, Val, ? extends Weight> e : analysisResults.cellSet()) {
+			ensuredPredicatesAtStatement.put(e.getRowKey(), new RequiredCryptSLPredicate(requiredCryptSLPredicate.getPred(), e.getRowKey()));
+		}
+	}
+	
+	
+	
 }

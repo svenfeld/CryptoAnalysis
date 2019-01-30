@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import boomerang.BackwardQuery;
+import boomerang.ForwardQuery;
 import boomerang.Query;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
@@ -35,7 +36,7 @@ public class CrySLResultsReporter  {
 		return listeners.remove(listener);
 	}
 
-	public void collectedValues(AnalysisSeedWithSpecification seed, Multimap<CallSiteWithParamIndex, ExtractedValue> parametersToValues) {
+	public void collectedValues(AnalysisSeedWithSpecification seed, Multimap<CallSiteWithParamIndex, ForwardQuery> parametersToValues) {
 		for (ICrySLResultsListener listen : listeners) {
 			listen.collectedValues(seed, parametersToValues);
 		}
@@ -55,12 +56,6 @@ public class CrySLResultsReporter  {
 		}
 	}
 
-	public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification, Collection<ISLConstraint> relConstraints) {
-		for (ICrySLResultsListener listen : listeners) {
-			listen.checkedConstraints(analysisSeedWithSpecification, relConstraints);
-		}
-	}
-
 	public void beforeAnalysis() {
 		for (ICrySLResultsListener listen : listeners) {
 			if (listen instanceof CrySLAnalysisListener) {
@@ -77,37 +72,6 @@ public class CrySLResultsReporter  {
 		}
 	}
 
-	public void beforeConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		for (ICrySLResultsListener listen : listeners) {
-			if (listen instanceof CrySLAnalysisListener) {
-				((CrySLAnalysisListener) listen).beforeConstraintCheck(analysisSeedWithSpecification);
-			}
-		}
-	}
-
-	public void afterConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		for (ICrySLResultsListener listen : listeners) {
-			if (listen instanceof CrySLAnalysisListener) {
-				((CrySLAnalysisListener) listen).afterConstraintCheck(analysisSeedWithSpecification);
-			}
-		}
-	}
-
-	public void beforePredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		for (ICrySLResultsListener listen : listeners) {
-			if (listen instanceof CrySLAnalysisListener) {
-				((CrySLAnalysisListener) listen).beforePredicateCheck(analysisSeedWithSpecification);
-			}
-		}
-	}
-
-	public void afterPredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		for (ICrySLResultsListener listen : listeners) {
-			if (listen instanceof CrySLAnalysisListener) {
-				((CrySLAnalysisListener) listen).afterPredicateCheck(analysisSeedWithSpecification);
-			}
-		}
-	}
 
 	public void seedStarted(IAnalysisSeed analysisSeedWithSpecification) {
 		for (ICrySLResultsListener listen : listeners) {

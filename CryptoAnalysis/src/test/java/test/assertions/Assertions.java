@@ -4,6 +4,9 @@ public class Assertions {
 	public static void assertState(Object o, int state) {
 		
 	}
+	public static void notInState(Object o, int state) {
+		
+	}
 	
 	public static void extValue(int pos) {
 		

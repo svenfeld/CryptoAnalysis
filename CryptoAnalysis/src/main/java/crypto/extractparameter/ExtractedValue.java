@@ -1,5 +1,7 @@
 package crypto.extractparameter;
 
+import boomerang.ForwardQuery;
+import boomerang.jimple.AllocVal;
 import boomerang.jimple.Statement;
 import soot.Value;
 
@@ -15,14 +17,14 @@ public class ExtractedValue {
 	public Statement stmt() {
 		return stmt;
 	}
-	
+
 	public Value getValue() {
 		return val;
 	}
-	
+
 	@Override
 	public String toString() {
-		return "Extracted Value: " + val + " at " +stmt;
+		return "Extracted Value: " + val + " at " + stmt;
 	}
 
 	@Override
@@ -55,5 +57,14 @@ public class ExtractedValue {
 			return false;
 		return true;
 	}
-	
+
+	public static ExtractedValue fromQuery(ForwardQuery v) {
+		if (v.var() instanceof AllocVal) {
+			AllocVal allocVal = (AllocVal) v.var();
+			return new ExtractedValue(allocVal.allocationStatement(), allocVal.allocationValue());
+		} else {
+			return new ExtractedValue(v.stmt(), v.var().value());
+		}
+	}
+
 }

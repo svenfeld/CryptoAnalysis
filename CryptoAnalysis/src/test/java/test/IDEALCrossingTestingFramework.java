@@ -36,6 +36,7 @@ import soot.jimple.Stmt;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
 import soot.jimple.toolkits.ide.icfg.JimpleBasedInterproceduralCFG;
 import test.assertions.MustBeInState;
+import test.assertions.NotInState;
 import test.core.selfrunning.AbstractTestingFramework;
 import test.core.selfrunning.ImprecisionException;
 import typestate.TransitionFunction;
@@ -91,7 +92,7 @@ public abstract class IDEALCrossingTestingFramework extends AbstractTestingFrame
 	@Override
 	public List<String> excludedPackages() {
 		List<String> excludedPackages = super.excludedPackages();
-		excludedPackages.add(Utils.getFullyQualifiedName(getRule(false)));
+		excludedPackages.add(Utils.getFullyQualifiedName(getRule(false)).toString());
 		return excludedPackages;
 	}
 	
@@ -166,7 +167,7 @@ public abstract class IDEALCrossingTestingFramework extends AbstractTestingFrame
 				continue;
 			InvokeExpr invokeExpr = stmt.getInvokeExpr();
 			String invocationName = invokeExpr.getMethod().getName();
-			if (!invocationName.startsWith("assertState"))
+			if (!invocationName.startsWith("assertState") && !invocationName.startsWith("notInState"))
 				continue;
 			Value param = invokeExpr.getArg(0);
 			if (!(param instanceof Local))
@@ -174,7 +175,11 @@ public abstract class IDEALCrossingTestingFramework extends AbstractTestingFrame
 			Local queryVar = (Local) param;
 			Value param2 = invokeExpr.getArg(1);
 			Val val = new Val(queryVar, m);
-			queries.add(new MustBeInState(stmt, val, param2.toString()));
+			if(invocationName.startsWith("notInState")) {
+				queries.add(new NotInState(u, val, param2.toString()));
+			} else {
+				queries.add(new MustBeInState(stmt, val, param2.toString()));
+			}
 		}
 	}
 

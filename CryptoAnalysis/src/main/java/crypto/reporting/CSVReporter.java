@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,6 +21,7 @@ import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
 
 import boomerang.BackwardQuery;
+import boomerang.ForwardQuery;
 import boomerang.Query;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
@@ -39,8 +39,6 @@ import crypto.analysis.errors.NeverTypeOfError;
 import crypto.analysis.errors.RequiredPredicateError;
 import crypto.analysis.errors.TypestateError;
 import crypto.extractparameter.CallSiteWithParamIndex;
-import crypto.extractparameter.ExtractedValue;
-import crypto.interfaces.ISLConstraint;
 import crypto.rules.CryptSLPredicate;
 import crypto.rules.CryptSLRule;
 import soot.MethodOrMethodContext;
@@ -191,26 +189,6 @@ public class CSVReporter extends CrySLAnalysisListener {
 	}
 
 	@Override
-	public void beforeConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
-	public void afterConstraintCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
-	public void beforePredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
-	public void afterPredicateCheck(AnalysisSeedWithSpecification analysisSeedWithSpecification) {
-		
-	}
-
-	@Override
 	public void seedStarted(IAnalysisSeed analysisSeedWithSpecification) {
 		// TODO Auto-generated method stub
 		
@@ -238,11 +216,6 @@ public class CSVReporter extends CrySLAnalysisListener {
 	}
 
 	@Override
-	public void checkedConstraints(AnalysisSeedWithSpecification analysisSeedWithSpecification,
-			Collection<ISLConstraint> relConstraints) {
-	}
-
-	@Override
 	public void onSeedTimeout(Node<Statement, Val> seed) {
 		
 	}
@@ -255,7 +228,7 @@ public class CSVReporter extends CrySLAnalysisListener {
 
 	@Override
 	public void collectedValues(AnalysisSeedWithSpecification seed,
-			Multimap<CallSiteWithParamIndex, ExtractedValue> collectedValues) {
+			Multimap<CallSiteWithParamIndex, ForwardQuery> collectedValues) {
 		
 	}
 

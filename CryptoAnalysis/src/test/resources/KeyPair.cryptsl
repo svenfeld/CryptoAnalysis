@@ -6,21 +6,26 @@ OBJECTS
 	java.security.PrivateKey retPriv;
 	java.security.PublicKey retPub;
 	
+	KeyPairGenertor generator;
+	
 EVENTS
-	co : KeyPair(consPub, consPriv);
+	co1 : KeyPair(consPub, consPriv);
+	co2: this = generator.generateKeyPair();
+	cons := (co1 | co2)
 
 	pu : retPub = getPublic();
 	pr : retPriv = getPrivate();
 	Gets := pu | pr;
 
 ORDER
-	co?, (pu*, pr*)*
+	cons, (pu*, pr*)*
 	
 REQUIRES
-	generatedPrivkey[consPriv];
-	generatedPubkey[consPub];
+	generatedPrivkey[consPriv]; //Different name for predicate? This rule also generates it
+	generatedPubkey[consPub]; //Different name for predicate? This rule also generates it
+	generatedKeypair[this]
 	
 ENSURES
-	generatedKeypair[this, _] after co;
+	generatedKeypair[this, _] after co; //I think we can remove this here, 
 	generatedPubkey[retPub] after pu;
 	generatedPrivkey[retPriv] after pr;
