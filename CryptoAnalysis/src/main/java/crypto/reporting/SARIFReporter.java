@@ -10,15 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import crypto.analysis.IAnalysisSeed;
 import crypto.analysis.errors.AbstractError;
-import crypto.rules.CrySLRule;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import soot.SootClass;
 import soot.SootMethod;
 

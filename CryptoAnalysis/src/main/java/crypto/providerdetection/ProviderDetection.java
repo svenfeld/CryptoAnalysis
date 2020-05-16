@@ -7,13 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import boomerang.BackwardQuery;
 import boomerang.Boomerang;
 import boomerang.DefaultBoomerangOptions;
@@ -24,10 +21,10 @@ import boomerang.jimple.Val;
 import boomerang.results.AbstractBoomerangResults;
 import boomerang.results.BackwardBoomerangResults;
 import boomerang.seedfactory.SeedFactory;
+import crypto.analysis.CrySLRulesetSelector;
 import crypto.analysis.CrySLRulesetSelector.RuleFormat;
 import crypto.exceptions.CryptoAnalysisException;
-import crypto.rules.CrySLRule;
-import crypto.analysis.CrySLRulesetSelector;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import soot.Body;
 import soot.Scene;
 import soot.SootClass;

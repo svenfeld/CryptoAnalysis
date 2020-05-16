@@ -6,13 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
-
 import boomerang.BackwardQuery;
 import boomerang.Query;
 import boomerang.jimple.Statement;
@@ -35,8 +33,8 @@ import crypto.analysis.errors.RequiredPredicateError;
 import crypto.analysis.errors.TypestateError;
 import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.extractparameter.ExtractedValue;
-import crypto.interfaces.ISLConstraint;
-import crypto.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.interfaces.ISLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
 import soot.SootClass;
 import soot.SootMethod;
 import sync.pds.solver.nodes.Node;

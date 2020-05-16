@@ -4,18 +4,14 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
-
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
-import crypto.rules.CrySLMethod;
+import de.darmstadt.tu.crossing.rules.CrySLMethod;
 import heros.utilities.DefaultValueMap;
 import soot.Scene;
 import soot.SootClass;

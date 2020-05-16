@@ -6,14 +6,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 import com.google.common.collect.Table.Cell;
-
 import boomerang.BackwardQuery;
 import boomerang.Query;
 import boomerang.callgraph.ObservableDynamicICFG;
@@ -44,9 +42,9 @@ import crypto.analysis.errors.RequiredPredicateError;
 import crypto.analysis.errors.TypestateError;
 import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.extractparameter.ExtractedValue;
-import crypto.interfaces.ISLConstraint;
-import crypto.rules.CrySLPredicate;
-import crypto.rules.CrySLRule;
+import de.darmstadt.tu.crossing.interfaces.ISLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import soot.Body;
 import soot.Local;
 import soot.SceneTransformer;

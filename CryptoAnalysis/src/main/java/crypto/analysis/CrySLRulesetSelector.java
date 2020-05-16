@@ -2,14 +2,13 @@ package crypto.analysis;
 
 import java.io.File;
 import java.util.List;
-import com.google.common.collect.Lists;
-import crypto.rules.CrySLRule;
-import crypto.rules.CrySLRuleReader;
-import crypto.cryslhandler.CrySLModelReader;
-import crypto.exceptions.CryptoAnalysisException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.common.collect.Lists;
+import crypto.exceptions.CryptoAnalysisException;
+import de.darmstadt.tu.crossing.handler.Parser;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
+import de.darmstadt.tu.crossing.rules.CrySLRuleReader;
 
 public class CrySLRulesetSelector {
 	
@@ -18,7 +17,7 @@ public class CrySLRulesetSelector {
 	public static enum RuleFormat {
 		SOURCE() {
 			public String toString() {
-				return CrySLModelReader.cryslFileEnding;
+				return Parser.cryslFileEnding;
 			}
 		},
 	}

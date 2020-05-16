@@ -24,10 +24,11 @@ import crypto.analysis.errors.PredicateContradictionError;
 import crypto.analysis.errors.RequiredPredicateError;
 import crypto.extractparameter.CallSiteWithExtractedValue;
 import crypto.extractparameter.CallSiteWithParamIndex;
-import crypto.interfaces.ISLConstraint;
-import crypto.rules.CrySLConstraint;
-import crypto.rules.CrySLPredicate;
-import crypto.rules.CrySLRule;
+import crypto.interfaces.ISLConstraintWithLocation;
+import de.darmstadt.tu.crossing.interfaces.ISLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import soot.SootMethod;
 import soot.Unit;
 import soot.Value;
@@ -221,7 +222,7 @@ public class PredicateHandler {
 					reportMissingPred(seed, (RequiredCrySLPredicate) pred);
 				} else if (pred instanceof CrySLConstraint) {
 					for (CrySLPredicate altPred : ((AlternativeReqPredicate) pred).getAlternatives()) {
-						reportMissingPred(seed, new RequiredCrySLPredicate(altPred, altPred.getLocation()));
+						reportMissingPred(seed, new RequiredCrySLPredicate(altPred, ((ISLConstraintWithLocation) altPred).getLocation()));
 					}
 				}
 			}

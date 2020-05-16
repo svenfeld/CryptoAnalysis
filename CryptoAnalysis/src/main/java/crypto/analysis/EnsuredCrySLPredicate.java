@@ -1,10 +1,9 @@
 package crypto.analysis;
 
 import com.google.common.collect.Multimap;
-
 import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.extractparameter.ExtractedValue;
-import crypto.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
 
 public class EnsuredCrySLPredicate {
 

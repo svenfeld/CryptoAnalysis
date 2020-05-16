@@ -1,10 +1,8 @@
 package crypto.reporting;
 
 import java.util.Collection;
-
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import boomerang.results.ForwardBoomerangResults;
@@ -14,7 +12,7 @@ import crypto.analysis.ICrySLResultsListener;
 import crypto.analysis.errors.AbstractError;
 import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.extractparameter.ExtractedValue;
-import crypto.interfaces.ISLConstraint;
+import de.darmstadt.tu.crossing.interfaces.ISLConstraint;
 import sync.pds.solver.nodes.Node;
 import typestate.TransitionFunction;
 

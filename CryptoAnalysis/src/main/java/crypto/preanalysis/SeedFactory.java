@@ -3,15 +3,13 @@ package crypto.preanalysis;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import boomerang.Query;
 import boomerang.WeightedForwardQuery;
-import crypto.rules.CrySLRule;
 import crypto.typestate.FiniteStateMachineToTypestateChangeFunction;
 import crypto.typestate.SootBasedStateMachineGraph;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import soot.SootMethod;
 import soot.Unit;
 import typestate.TransitionFunction;

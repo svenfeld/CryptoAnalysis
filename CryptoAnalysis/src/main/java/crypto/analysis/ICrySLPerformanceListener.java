@@ -1,14 +1,12 @@
 package crypto.analysis;
 
 import java.util.Set;
-
 import com.google.common.collect.Table;
-
 import boomerang.BackwardQuery;
 import boomerang.Query;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
-import crypto.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
 
 public interface ICrySLPerformanceListener {
 

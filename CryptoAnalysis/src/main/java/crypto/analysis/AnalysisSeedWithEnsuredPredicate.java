@@ -1,21 +1,19 @@
 package crypto.analysis;
 
 import java.util.Set;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table.Cell;
-
 import boomerang.callgraph.ObservableICFG;
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import boomerang.results.ForwardBoomerangResults;
-import crypto.rules.StateMachineGraph;
-import crypto.rules.StateNode;
-import crypto.rules.TransitionEdge;
 import crypto.typestate.ExtendedIDEALAnaylsis;
 import crypto.typestate.SootBasedStateMachineGraph;
+import de.darmstadt.tu.crossing.rules.StateMachineGraph;
+import de.darmstadt.tu.crossing.rules.StateNode;
+import de.darmstadt.tu.crossing.rules.TransitionEdge;
 import ideal.IDEALSeedSolver;
 import soot.SootMethod;
 import soot.Unit;

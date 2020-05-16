@@ -5,17 +5,15 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 import boomerang.jimple.Statement;
-import crypto.rules.CrySLMethod;
-import crypto.rules.StateMachineGraph;
-import crypto.rules.StateNode;
-import crypto.rules.TransitionEdge;
+import de.darmstadt.tu.crossing.rules.CrySLMethod;
+import de.darmstadt.tu.crossing.rules.StateMachineGraph;
+import de.darmstadt.tu.crossing.rules.StateNode;
+import de.darmstadt.tu.crossing.rules.TransitionEdge;
 import soot.SootMethod;
 import typestate.TransitionFunction;
 import typestate.finiteautomata.MatcherTransition;

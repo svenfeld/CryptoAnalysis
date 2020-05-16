@@ -4,21 +4,18 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
-
 import boomerang.Query;
 import boomerang.callgraph.ObservableICFG;
 import boomerang.debugger.Debugger;
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import crypto.predicates.PredicateHandler;
-import crypto.rules.CrySLRule;
 import crypto.typestate.CrySLMethodToSootMethod;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import heros.utilities.DefaultValueMap;
 import ideal.IDEALSeedSolver;
 import soot.MethodOrMethodContext;

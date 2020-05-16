@@ -5,12 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 import boomerang.BackwardQuery;
 import boomerang.Boomerang;
 import boomerang.ForwardQuery;
@@ -21,10 +19,10 @@ import boomerang.jimple.Val;
 import boomerang.results.BackwardBoomerangResults;
 import crypto.analysis.CryptoScanner;
 import crypto.boomerang.CogniCryptIntAndStringBoomerangOptions;
-import crypto.rules.CrySLMethod;
 import crypto.typestate.CrySLMethodToSootMethod;
 import crypto.typestate.LabeledMatcherTransition;
 import crypto.typestate.SootBasedStateMachineGraph;
+import de.darmstadt.tu.crossing.rules.CrySLMethod;
 import heros.utilities.DefaultValueMap;
 import soot.Local;
 import soot.Scene;

@@ -3,14 +3,12 @@ package crypto.analysis.errors;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Sets;
-
 import boomerang.jimple.Statement;
 import crypto.analysis.IAnalysisSeed;
-import crypto.rules.CrySLRule;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
 import soot.SootMethod;
 import soot.jimple.InvokeExpr;
 import soot.jimple.Stmt;

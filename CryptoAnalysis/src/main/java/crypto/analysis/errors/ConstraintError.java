@@ -2,22 +2,20 @@ package crypto.analysis.errors;
 
 import java.util.List;
 import java.util.Set;
-
 import com.google.common.base.CharMatcher;
-
 import boomerang.jimple.Statement;
 import boomerang.jimple.Val;
 import crypto.analysis.IAnalysisSeed;
 import crypto.extractparameter.CallSiteWithExtractedValue;
-import crypto.interfaces.ISLConstraint;
-import crypto.rules.CrySLArithmeticConstraint;
-import crypto.rules.CrySLComparisonConstraint;
-import crypto.rules.CrySLComparisonConstraint.CompOp;
-import crypto.rules.CrySLConstraint;
-import crypto.rules.CrySLPredicate;
-import crypto.rules.CrySLRule;
-import crypto.rules.CrySLSplitter;
-import crypto.rules.CrySLValueConstraint;
+import de.darmstadt.tu.crossing.interfaces.ISLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLArithmeticConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLComparisonConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLComparisonConstraint.CompOp;
+import de.darmstadt.tu.crossing.rules.CrySLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
+import de.darmstadt.tu.crossing.rules.CrySLSplitter;
+import de.darmstadt.tu.crossing.rules.CrySLValueConstraint;
 import soot.Value;
 import soot.jimple.AssignStmt;
 import soot.jimple.Constant;

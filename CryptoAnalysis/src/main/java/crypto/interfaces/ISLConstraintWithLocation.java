@@ -4,9 +4,7 @@ import java.util.Set;
 
 import boomerang.jimple.Statement;
 
-public interface ISLConstraint extends java.io.Serializable, ICrySLPredicateParameter {
-
-	public Set<String> getInvolvedVarNames(); 
+public interface ISLConstraintWithLocation extends de.darmstadt.tu.crossing.interfaces.ISLConstraint {
 
 	public void setLocation(Statement location);
 

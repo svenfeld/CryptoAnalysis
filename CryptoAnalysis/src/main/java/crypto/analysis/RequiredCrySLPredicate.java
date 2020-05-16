@@ -2,10 +2,10 @@ package crypto.analysis;
 
 import java.util.Set;
 import boomerang.jimple.Statement;
-import crypto.interfaces.ISLConstraint;
-import crypto.rules.CrySLPredicate;
+import crypto.interfaces.ISLConstraintWithLocation;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
 
-public class RequiredCrySLPredicate implements ISLConstraint {
+public class RequiredCrySLPredicate implements ISLConstraintWithLocation {
 
 	private static final long serialVersionUID = 9111353268603202392L;
 	private final CrySLPredicate predicate;

@@ -11,15 +11,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-
 import boomerang.jimple.Statement;
 import crypto.analysis.AlternativeReqPredicate;
 import crypto.analysis.AnalysisSeedWithSpecification;
@@ -36,18 +33,19 @@ import crypto.analysis.errors.NeverTypeOfError;
 import crypto.extractparameter.CallSiteWithExtractedValue;
 import crypto.extractparameter.CallSiteWithParamIndex;
 import crypto.extractparameter.ExtractedValue;
-import crypto.interfaces.ICrySLPredicateParameter;
-import crypto.interfaces.ISLConstraint;
-import crypto.rules.CrySLArithmeticConstraint;
-import crypto.rules.CrySLComparisonConstraint;
-import crypto.rules.CrySLConstraint;
-import crypto.rules.CrySLConstraint.LogOps;
-import crypto.rules.CrySLMethod;
-import crypto.rules.CrySLObject;
-import crypto.rules.CrySLPredicate;
-import crypto.rules.CrySLSplitter;
-import crypto.rules.CrySLValueConstraint;
+import crypto.interfaces.ISLConstraintWithLocation;
 import crypto.typestate.CrySLMethodToSootMethod;
+import de.darmstadt.tu.crossing.interfaces.ICrySLPredicateParameter;
+import de.darmstadt.tu.crossing.interfaces.ISLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLArithmeticConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLComparisonConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLConstraint;
+import de.darmstadt.tu.crossing.rules.CrySLConstraint.LogOps;
+import de.darmstadt.tu.crossing.rules.CrySLMethod;
+import de.darmstadt.tu.crossing.rules.CrySLObject;
+import de.darmstadt.tu.crossing.rules.CrySLPredicate;
+import de.darmstadt.tu.crossing.rules.CrySLSplitter;
+import de.darmstadt.tu.crossing.rules.CrySLValueConstraint;
 import soot.Body;
 import soot.IntType;
 import soot.SootMethod;
@@ -115,10 +113,10 @@ public class ConstraintSolver {
 		this.reporter = crySLResultsReporter;
 	}
 
-	private ISLConstraint collectAlternativePredicates(CrySLConstraint cons, AlternativeReqPredicate alt) {
+	private ISLConstraintWithLocation collectAlternativePredicates(CrySLConstraint cons, AlternativeReqPredicate alt) {
 		CrySLPredicate right = (CrySLPredicate) cons.getRight();
 		if (alt == null) {
-			alt = new AlternativeReqPredicate(right, right.getLocation());
+			alt = new AlternativeReqPredicate(right, ((ISLConstraintWithLocation) right).getLocation());
 		} else {
 			alt.addAlternative(right);
 		}
