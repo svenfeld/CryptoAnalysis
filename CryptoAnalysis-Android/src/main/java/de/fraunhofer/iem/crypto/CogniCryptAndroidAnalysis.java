@@ -3,12 +3,9 @@ package de.fraunhofer.iem.crypto;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
-
 import boomerang.callgraph.BoomerangICFG;
 import boomerang.callgraph.ObservableICFG;
 import boomerang.callgraph.ObservableStaticICFG;
@@ -17,8 +14,10 @@ import crypto.analysis.CrySLResultsReporter;
 import crypto.analysis.CryptoScanner;
 import crypto.analysis.errors.AbstractError;
 import crypto.reporting.CollectErrorListener;
-import crypto.rules.CrySLRule;
-import crypto.rules.CrySLRuleReader;
+import crypto.reporting.CommandLineReporter;
+import de.darmstadt.tu.crossing.handler.Parser;
+import de.darmstadt.tu.crossing.rules.CrySLRule;
+import de.darmstadt.tu.crossing.rules.CrySLRuleReader;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
@@ -28,9 +27,6 @@ import soot.jimple.infoflow.android.InfoflowAndroidConfiguration;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.config.SootConfigForAndroid;
 import soot.options.Options;
-import crypto.cryslhandler.CrySLModelReader;
-
-import crypto.reporting.CommandLineReporter;
 
 public class CogniCryptAndroidAnalysis {
 	public static void main(String... args) {
@@ -164,11 +160,11 @@ public class CogniCryptAndroidAnalysis {
 		List<CrySLRule> rules = Lists.newArrayList();
 		if (rulesDirectory == null) {
 			throw new RuntimeException(
-					"Please specify a directory the CrySL rules ( " + CrySLModelReader.cryslFileEnding +" Files) are located in.");
+					"Please specify a directory the CrySL rules ( " + Parser.cryslFileEnding +" Files) are located in.");
 		}
 		File[] listFiles = new File(rulesDirectory).listFiles();
 		for (File file : listFiles) {
-			if (file != null && file.getName().endsWith(CrySLModelReader.cryslFileEnding)) {
+			if (file != null && file.getName().endsWith(Parser.cryslFileEnding)) {
 				rules.add(CrySLRuleReader.readFromSourceFile(file));
 			}
 		}
