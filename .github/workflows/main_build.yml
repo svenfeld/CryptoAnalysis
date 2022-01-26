@@ -42,4 +42,27 @@ jobs:
             ${{ runner.os }}-maven-
       # Compiles, tests, and packages the CrySL project
       - name: Compile, test, and package the project
-        run: mvn clean install
+        run: mvn clean install -DskipTests
+
+  publish-snapshot:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      # Sets up Java version
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-package: jdk
+          java-version: '8'
+      # Sets up Maven version
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v4.2
+        with:
+          maven-version: 3.6.3
+      - name: publish SNAPSHOT
+        run: mvn -B deploy -DskipTests=true -e -X
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

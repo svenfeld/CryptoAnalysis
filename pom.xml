@@ -44,32 +44,13 @@
 			</plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<id>soot-snapshot</id>
-			<name>soot snapshot</name>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-snapshot/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>soot-release</id>
-			<name>soot release</name>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-release/</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+
 	<distributionManagement>
-		<snapshotRepository>
-			<id>soot-snapshot</id>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-snapshot/</url>
-		</snapshotRepository>
-		<repository>
-			<id>soot-release</id>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-release/</url>
-		</repository>
-	</distributionManagement>
+   <repository>
+     <id>github</id>
+     <name>GitHub svenfeld Apache Maven Packages</name>
+     <url>https://maven.pkg.github.com/svenfeld/CryptoAnalysis</url>
+   </repository>
+</distributionManagement>
+
 </project>
