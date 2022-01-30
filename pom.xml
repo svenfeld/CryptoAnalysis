@@ -5,11 +5,11 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>de.fraunhofer.iem</groupId>
-	<artifactId>CryptoAnalysis-Parent</artifactId>
+	<groupId>com.github.svenfeld</groupId>
+	<artifactId>CryptoAnalysis.parent</artifactId>
 	<version>${revision}</version>
 	<packaging>pom</packaging>
-	<name>CryptoAnalysis-parent</name>
+	<name>CryptoAnalysis.parent</name>
 
 	<modules>
 		<module>CryptoAnalysis</module>
@@ -17,7 +17,7 @@
 	</modules>
 
 	<properties>
-		<revision>2.8.0-SNAPSHOT</revision>
+		<revision>2.8.1-SNAPSHOT</revision>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<build>
@@ -45,12 +45,28 @@
 		</plugins>
 	</build>
 
-	<distributionManagement>
-   <repository>
-     <id>github</id>
-     <name>GitHub svenfeld Apache Maven Packages</name>
-     <url>https://maven.pkg.github.com/svenfeld/CryptoAnalysis</url>
-   </repository>
-</distributionManagement>
+	<profiles>
+		<profile>
+			<id>github</id>
+			<distributionManagement>
+				<repository>
+					<id>github</id>
+					<name>GitHub svenfeld Apache Maven Packages</name>
+					<url>https://maven.pkg.github.com/svenfeld/CryptoAnalysis</url>
+				</repository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>nexus</id>
+			<distributionManagement>
+				<snapshotRepository>
+					<id>soot-snapshot</id>
+					<name>Soot snapshot repository</name>
+					<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-snapshot/</url>
+					<layout>default</layout>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+	</profiles>
 
 </project>

@@ -40,9 +40,9 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      # Compiles, tests, and packages the CrySL project
+      # Compiles, tests, and packages the CryptoAnalysis project
       - name: Compile, test, and package the project
-        run: mvn clean install -DskipTests
+        run: mvn clean install
 
   publish-snapshot:
     needs: build
@@ -63,6 +63,6 @@ jobs:
         with:
           maven-version: 3.6.3
       - name: publish SNAPSHOT
-        run: mvn -B deploy -DskipTests=true -e -X
+        run: mvn -B deploy -DskipTests=true -Pgithub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

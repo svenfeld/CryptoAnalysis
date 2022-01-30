@@ -3,11 +3,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>CryptoAnalysis</artifactId>
+	<artifactId>cryptoanalysis</artifactId>
 
 	<parent>
-		<groupId>de.fraunhofer.iem</groupId>
-		<artifactId>CryptoAnalysis-Parent</artifactId>
+		<groupId>com.github.svenfeld</groupId>
+		<artifactId>CryptoAnalysis.parent</artifactId>
 		<version>${revision}</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
@@ -338,30 +338,13 @@
 		</dependency>
 	</dependencies>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>soot-snapshot</id>
-			<name>Soot snapshot repository</name>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-snapshot/</url>
-			<layout>default</layout>
-		</snapshotRepository>
-		<repository>
-			<uniqueVersion>true</uniqueVersion>
-			<id>soot-release</id>
-			<name>Soot release repository</name>
-			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-release/</url>
-			<layout>default</layout>
-		</repository>
-	</distributionManagement>
+
 
 	<repositories>
 		<repository>
 			<id>soot-snapshot</id>
 			<name>soot snapshots</name>
 			<url>https://soot-build.cs.uni-paderborn.de/nexus/repository/soot-snapshot/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
 		</repository>
 		<repository>
 			<id>soot-release</id>
