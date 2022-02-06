@@ -46,7 +46,7 @@ jobs:
         run: ls
       # Compiles, tests, and packages the CryptoAnalysis project
       - name: Compile, test, and package the project
-        run: mvn -s $GITHUB_WORKSPACE/.github/workflows/settings.xml -B clean install
+        run: mvn -s .github/workflows/settings.xml -B clean install
         env:
           USER_NAME: ${{ secrets.USER_NAME }}
           TOKEN: ${{ secrets.TOKEN }}
