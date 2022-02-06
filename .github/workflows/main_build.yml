@@ -41,7 +41,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
       - name: setup settins.xml
-      - uses: s4u/maven-settings-action@v2.5.0
+        uses: s4u/maven-settings-action@v2.5.0
         with:
           servers: |
             [{
