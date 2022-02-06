@@ -344,6 +344,10 @@
 
 
 	<repositories>
+	        <repository>
+          <id>github</id>
+          <url>https://maven.pkg.github.com/svenfeld/CryptSL</url>
+        </repository>
 		<repository>
 			<id>soot-snapshot</id>
 			<name>soot snapshots</name>
