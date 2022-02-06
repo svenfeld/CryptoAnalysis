@@ -44,5 +44,8 @@ jobs:
             ${{ runner.os }}-maven-
       # Compiles, tests, and packages the CryptoAnalysis project
       - name: Compile, test, and package the project
-        run: mvn clean install
+        run: mvn -s $GITHUB_WORKSPACE/.github/workflows/settings.xml -B clean install
+        env:
+          USER_NAME: ${{ secrets.USER_NAME }}
+          TOKEN: ${{ secrets.TOKEN }}
 
