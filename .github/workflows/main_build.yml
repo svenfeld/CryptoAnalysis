@@ -42,6 +42,8 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
+      - name: run ls
+        run: ls
       # Compiles, tests, and packages the CryptoAnalysis project
       - name: Compile, test, and package the project
         run: mvn -s $GITHUB_WORKSPACE/.github/workflows/settings.xml -B clean install
