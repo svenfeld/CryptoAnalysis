@@ -2,6 +2,8 @@ name: CryptoAnalysis build
 
 on: [push, pull_request]
 
+permissions: read-all
+
 jobs:
   # Builds the project in windows, ubuntu
   build:
