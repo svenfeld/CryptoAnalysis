@@ -40,12 +40,16 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-      - name: run ls
-        run: ls
+      - name: setup settins.xml
+      - uses: s4u/maven-settings-action@v2.5.0
+        with:
+          servers: |
+            [{
+                "id": "github",
+                "username": "${{ secrets.USER_NAME }}",
+                "password": "${{ secrets.TOKEN }}"
+            }]
       # Compiles, tests, and packages the CryptoAnalysis project
       - name: Compile, test, and package the project
-        run: mvn -s .github/workflows/settings.xml -B clean install
-        env:
-          USER_NAME: ${{ secrets.USER_NAME }}
-          TOKEN: ${{ secrets.TOKEN }}
+        run: mvn -B clean install
 
