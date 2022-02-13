@@ -49,11 +49,11 @@
 		<profile>
 			<id>github</id>
 			<distributionManagement>
-				<repository>
+				<snapshotRepository>
 					<id>github</id>
 					<name>GitHub svenfeld Apache Maven Packages</name>
 					<url>https://maven.pkg.github.com/svenfeld/CryptoAnalysis</url>
-				</repository>
+				</snapshotRepository>
 			</distributionManagement>
 		</profile>
 		<profile>
