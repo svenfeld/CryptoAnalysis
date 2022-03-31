@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        java: ['8', '11']
     runs-on: ${{ matrix.os }}
     name: Project build in ${{ matrix.os }}
     steps:
@@ -19,7 +20,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-package: jdk
-          java-version: '8'
+          java-version: ${{ matrix.java }}
       # Sets up Maven version
       - name: Set up Maven
         uses: stCarolas/setup-maven@v4.2
