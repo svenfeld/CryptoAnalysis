@@ -20,7 +20,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-package: jdk
-          java-version: '8'
+          java-version: '11'
       # Sets up Maven version
       - name: Set up Maven
         uses: stCarolas/setup-maven@v4.2
@@ -42,7 +42,7 @@ jobs:
             ${{ runner.os }}-maven-
       # Compiles, tests, and packages the CryptoAnalysis project
       - name: Compile, test, and package the project
-        run: mvn clean install
+        run: mvn clean verify
 
   publish-snapshot:
     needs: build
@@ -56,7 +56,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-package: jdk
-          java-version: '8'
+          java-version: '11'
       # Sets up Maven version
       - name: Set up Maven
         uses: stCarolas/setup-maven@v4.2
