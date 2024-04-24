@@ -162,7 +162,7 @@ public class GitHubAnnotationReporter extends CommandLineReporter {
 
    
     private static void setSummary(String summary) {
-        return
+        return;
     }
 
     /**
