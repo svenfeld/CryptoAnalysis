@@ -160,21 +160,9 @@ public class GitHubAnnotationReporter extends CommandLineReporter {
         return System.getenv(name);
     }
 
-    /**
-     * Sets a <a
-     * href="https://docs.github.com/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary">summary</a>
-     * for this GitHub Actions step. Supports <a href="https://github.github.com/gfm/">GitHub flavored
-     * Markdown</a>.
-     *
-     * @param summary the content of the summary
-     */
+   
     private static void setSummary(String summary) {
-        String filePath = System.getenv("GITHUB_STEP_SUMMARY");
-        try {
-            Files.write(Paths.get(filePath), summary.getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.SYNC);
-        } catch (NullPointerException | IOException e) {
-            throw new IllegalStateException("Exception while trying to write to GITHUB_STEP_SUMMARY file. Make sure you are running inside GitHub Actions.", e);
-        }
+        return;
     }
 
     /**
