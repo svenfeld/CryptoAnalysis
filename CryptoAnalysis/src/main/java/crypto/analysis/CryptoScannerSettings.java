@@ -244,15 +244,6 @@ public class CryptoScannerSettings implements Callable<Integer> {
 				case "txt":
 					reportFormats.add(ReportFormat.TXT);
 					break;
-				case "sarif":
-					reportFormats.add(ReportFormat.SARIF);
-					break;
-				case "csv":
-					reportFormats.add(ReportFormat.CSV);
-					break;
-				case "csv_summary":
-					reportFormats.add(ReportFormat.CSV_SUMMARY);
-					break;
 				case "github_annotation":
 					reportFormats.add(ReportFormat.GITHUB_ANNOTATION);
 					break;
